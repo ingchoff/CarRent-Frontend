@@ -46,14 +46,14 @@ const authStore = useAuthStore()
 
 const menu = [
   {
-    header: 'OCR Card',
+    header: 'จัดการรถ',
     icon: 'PhotographIcon',
-    to: '/',
+    to: '/cars',
   },
   {
-    header: 'Amazon Stock',
+    header: 'เช่ารถ',
     icon: 'PhotographIcon',
-    to: '/amazon',
+    to: '/rentals',
   },
   {
     header: 'About',
