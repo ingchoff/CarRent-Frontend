@@ -1,0 +1,37 @@
+@import '@/styles/variables.scss';
+div[role='tablist'] {
+  margin-bottom: 12px;
+  button[role='tab'] {
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    &:hover:not([aria-selected='true']) {
+      background-color: rgba($color: $secondary, $alpha: 0.1);
+    }
+  }
+  button[aria-selected='true'] {
+    color: white;
+    background-color: rgba($color: $secondary, $alpha: 1);
+  }
+}
+div[role='radiogroup'].tabs {
+  display: flex;
+  align-items: center;
+  overflow-x: scroll;
+  padding-bottom: 12px;
+  div[role='radio'] {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    &:hover:not([aria-checked='true']) {
+      background-color: rgba($color: $secondary, $alpha: 0.1);
+    }
+  }
+  div[aria-checked='true'] {
+    color: white;
+    background-color: rgba($color: $secondary, $alpha: 1);
+  }
+}

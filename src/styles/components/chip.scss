@@ -1,0 +1,41 @@
+@import '@/styles/variables.scss';
+.chip {
+  display: inline-flex;
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1rem;
+  min-width: 28px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  &.primary {
+    color: $primary;
+    border-color: $primary;
+    background-color: rgba($color: $primary, $alpha: 0.2);
+  }
+  &.secondary {
+    color: $secondary;
+    border-color: $secondary;
+    background-color: rgba($color: $secondary, $alpha: 0.1);
+  }
+  &.success {
+    color: $success;
+    border-color: $success;
+    background-color: rgba($color: $success, $alpha: 0.1);
+  }
+  &.error {
+    color: $error;
+    border-color: $error;
+    background-color: rgba($color: $error, $alpha: 0.1);
+  }
+  &.warning {
+    color: $warning;
+    border-color: $warning;
+    background-color: rgba($color: $warning, $alpha: 0.1);
+  }
+}

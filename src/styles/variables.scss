@@ -1,0 +1,23 @@
+$primary: #4338ca;
+$primary-lighten: #9590df;
+$secondary: #24303e;
+$secondary-lighten: #e9eaeb;
+$success: #10b981;
+$success-lighten: #e7f8f2;
+$error: #ef4444;
+$error-lighten: #fdecec;
+$warning: #f59e0b;
+$warning-lighten: #fef5e6;
+
+:root {
+  --color-primary: #{$primary};
+  --color-primary-lighten: #{$primary-lighten};
+  --color-secondary: #{$secondary};
+  --color-secondary-lighten: #{$secondary-lighten};
+  --color-success: #{$success};
+  --color-success-lighten: #{$success-lighten};
+  --color-error: #{$error};
+  --color-error-lighten: #{$error-lighten};
+  --color-warning: #{$warning};
+  --color-warning-lighten: #{$warning-lighten};
+}

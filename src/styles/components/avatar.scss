@@ -1,0 +1,15 @@
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  height: 40px;
+  width: 40px;
+  border-radius: 9999px;
+  border: 2px solid #e5e7eb;
+  background-color: #e5e7eb;
+  &.primary {
+    border-color: $primary;
+    background-color: rgba($color: $primary, $alpha: 0.2);
+  }
+}

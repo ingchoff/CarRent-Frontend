@@ -1,0 +1,38 @@
+.table {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  width: 100%;
+}
+table {
+  width: 100%;
+  border-radius: 0.5em;
+  & thead {
+    position: sticky;
+    top: 0;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    & th {
+      padding: 0.5rem 0.75rem;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      font-weight: 500;
+      font-size: 0.825rem;
+      line-height: 1.25rem;
+      text-align: left;
+    }
+  }
+  & tbody {
+    background-color: white;
+    & tr:not(:last-child) {
+      border-bottom: 1px solid #e5e7eb;
+    }
+    & td {
+      padding: 0.5rem 0.75rem;
+      font-size: 1rem;
+      line-height: 1.25rem;
+    }
+  }
+}
