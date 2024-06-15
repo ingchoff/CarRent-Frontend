@@ -39,7 +39,7 @@ async function handleResponse(response: Response) {
     ) {
       await logout()
       router.push('/login')
-    } else if (response.status === 403) {
+    } else if (response.status === 401) {
       updateAlert({ type: 'error', message: 'Username or Password is wrong.' })
     }
   } else {

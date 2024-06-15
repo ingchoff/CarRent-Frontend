@@ -4,7 +4,7 @@
       <div class="grow">
         <router-link class="flex items-center items-center" to="/">
           <img class="w-10 h-auto" src="@/assets/logo.png" alt="" />
-          <h1 class="text-xl font-medium">OCRCard</h1>
+          <h1 class="text-xl font-medium">Car Rental</h1>
         </router-link>
       </div>
       <div class="nav-content" :class="{ flex: onShow }">

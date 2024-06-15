@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AboutView from '../views/AboutView.vue'
 import CarsView from '../views/CarsView.vue'
+import Login from '../views/Login.vue'
+import Register from '../views/Register.vue'
 import { useAuthStore } from '@/stores'
 
 const router = createRouter({
@@ -10,6 +12,21 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: AboutView,
+    },
+    {
+      path: '/about',
+      name: 'about',
+      component: AboutView,
+    },
+    {
+      path: '/login',
+      name: 'Login',
+      component: Login,
+    },
+    {
+      path: '/register',
+      name: 'Register',
+      component: Register,
     },
     {
       path: '/cars',
@@ -22,7 +39,7 @@ const router = createRouter({
 
 router.beforeEach(async (to: any) => {
   // redirect to login page if not logged in and trying to access a restricted page
-  const publicPages = ['/login']
+  const publicPages = ['/login', '/about', '/register']
   const authRequired = !publicPages.includes(to.path)
   const authStore = useAuthStore()
 

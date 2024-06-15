@@ -16,7 +16,7 @@ export const useAuthStore = defineStore({
         password,
       })
       if (token) {
-        localStorage.setItem('token', JSON.stringify(token))
+        localStorage.setItem('token', JSON.stringify(token.token))
         this.token = JSON.parse(localStorage.getItem('token') as string)
       }
     },

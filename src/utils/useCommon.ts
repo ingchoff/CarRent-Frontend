@@ -71,7 +71,7 @@ export default function () {
     let value = (event.target as HTMLInputElement).value
     let keyCode = event.keyCode ? event.keyCode : event.which
     let char = String.fromCharCode(keyCode)
-    if (/^[0-9]+$/.test(char) && value.split('').length < 13) return true
+    if (/^[0-9]+$/.test(char) && value.split('').length < 10) return true
     else event.preventDefault()
   }
 
