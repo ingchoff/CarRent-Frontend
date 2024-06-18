@@ -23,6 +23,9 @@
           </div>
         </div>
       </div>
+      <div v-if="authStore.token" class="ml-4">
+        Hello, {{ authStore.user.Email }}
+      </div>
       <Button v-if="authStore.token" class="warning ml-4" @click="logout"
         >Logout</Button
       >

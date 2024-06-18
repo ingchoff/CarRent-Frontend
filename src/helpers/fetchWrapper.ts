@@ -11,17 +11,24 @@ export const fetchWrapper = {
 
 function request(method: string) {
   return async (url: string, body: any) => {
-    const { token } = useAuthStore()
+    const { token, logout } = useAuthStore()
     const requestOptions: any = {
       method,
-      headers: { Authorization: `Bearer ${token?.accessToken}` },
+      headers: { Authorization: `${token}` },
     }
     if (body) {
       requestOptions.headers['Content-Type'] = 'application/json'
       requestOptions.body = JSON.stringify(body)
     }
-    const res = await fetch(url, requestOptions)
-    return handleResponse(res)
+    try {
+      const res = await fetch(url, requestOptions)
+      return handleResponse(res)
+    } catch (error: any) {
+      if (error.message === 'Failed to fetch') {
+        await logout()
+        router.push('/login')
+      }
+    }
   }
 }
 
@@ -29,9 +36,14 @@ async function handleResponse(response: Response) {
   const { updateAlert } = useAlert()
   if (!response.ok) {
     const { token, refreshToken, logout } = useAuthStore()
-    const err = await response.text()
-    if (response.status === 401 && err === 'TokenExpiredError' && token) {
-      await refreshToken()
+    const err = await response.json()
+    if (
+      response.status === 401 &&
+      err.msg === 'could not parse token' &&
+      token
+    ) {
+      await logout()
+      router.push('/login')
     } else if (
       response.status === 500 &&
       err === 'TokenExpiredError' &&

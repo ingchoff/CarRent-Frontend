@@ -74,7 +74,7 @@ const submitSignInForm = async () => {
   updateLoading({ login: true })
   await authStore.login(state.username, state.password)
   updateLoading({ login: false })
-  router.push('/amazon')
+  router.push('/cars')
 }
 
 const showPass = () => {
