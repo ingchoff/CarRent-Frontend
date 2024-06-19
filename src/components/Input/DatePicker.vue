@@ -1,5 +1,9 @@
 <template>
-  <label v-if="label" class="text-left font-medium">
+  <label
+    v-if="label"
+    class="text-left font-medium"
+    :class="`text-${labelColor}`"
+  >
     {{ label }}
   </label>
   <v-date-picker
@@ -81,6 +85,7 @@ import { onBeforeMount, ref, toRefs, useAttrs, watch } from 'vue'
 interface IProps {
   id?: string
   label?: string
+  labelColor?: string
   placeholder?: string
   modelValue: any
   min?: string | Date | number

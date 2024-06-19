@@ -1,6 +1,10 @@
 <template>
   <div>
-    <label v-if="label" class="text-left font-medium">
+    <label
+      v-if="label"
+      class="text-left font-medium"
+      :class="`text-${props.labelColor ? props.labelColor : 'black'}`"
+    >
       {{ label }}
     </label>
     <div class="relative flex-grow">
@@ -41,6 +45,7 @@ import type { ErrorObject } from '@vuelidate/core'
 import { toRefs, useAttrs } from 'vue'
 interface IProps {
   label?: string
+  labelColor?: string
   modelValue: any
   items: { text: string; value: any }[]
   errors?: ErrorObject[]
