@@ -23,8 +23,10 @@
         เพิ่มรถเช่า
       </Button>
     </div>
-    <div class="grid grid-cols-4 gap-4">
-      <aside class="p-4 bg-secondary rounded h-64">
+    <div class="grid grid-cols-3 lg:grid-cols-4 gap-4">
+      <aside
+        class="hidden sm:hidden md:hidden lg:block p-4 bg-secondary rounded h-64"
+      >
         <Select
           :items="[{ text: '---Select---', value: '' }, ...carNames]"
           label="ชื่อยี่ห้อ"
@@ -44,26 +46,72 @@
         <div
           v-for="car in cars"
           :key="car.ID.toString()"
-          class="flex justify-between mb-4 p-4 border rounded"
+          class="tw-card rounded-md border flex flex-col p-0 lg:flex-row lg:p-3 relative mb-4 z-[5]"
         >
-          <img
-            :src="car.Image"
-            alt="Car Image"
-            class="w-60 h-48 object-cover mr-4"
-          />
-          <div class="flex flex-col justify-between gap-4">
-            <h3 class="text-lg font-semibold uppercase">
-              {{ car.Make }} {{ car.Model }} ({{ car.Year }})
-            </h3>
-            <p>ราคาเช่า/วัน: {{ car.DailyRate }}</p>
+          <div class="car-img-comp relative">
+            <img
+              :src="car.Image"
+              alt="Car Image"
+              class="w- h-48 object-cover mr-4 rounded-md"
+            />
           </div>
-          <div class="flex items-end gap-2">
-            <Button class="bg-primary text-white px-4 py-2 rounded">
-              จองเช่า
-            </Button>
-            <Button class="bg-primary text-white px-4 py-2 rounded">
-              แก้ไขข้อมูล
-            </Button>
+          <div class="flex flex-col justify-between lg:ml-3 w-full">
+            <div class="px-3 lg:px-0">
+              <div class="mb-3 md:flex-row md:justify-between mt-6 lg:mt-0">
+                <div class="flex flex-row justify-between">
+                  <h3 class="text-lg font-semibold uppercase">
+                    {{ car.Make }} {{ car.Model }} ({{ car.Year }})
+                  </h3>
+                </div>
+              </div>
+              <div
+                class="space-y-6 bg-white p-4 lg:space-y-4 lg:px-0 rounded-md lg:w-80"
+              >
+                <div
+                  class="grid grid-cols-2 gap-4 md:gap-4 sm:gap-6 grid-cols-2"
+                >
+                  <div class="col-span-2">
+                    <div class="flex justify-center gap-2">
+                      <div class="content-center">
+                        <Icon name="InformationCircleIcon"></Icon>
+                      </div>
+                      <p>รายละเอียด</p>
+                    </div>
+                  </div>
+                  <div class="flex gap-2 justify-center">
+                    <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
+                      เกียร์
+                    </p>
+                    <p class="tw-subtile tw-subtile-4">
+                      {{ car.Gear }}
+                    </p>
+                  </div>
+
+                  <div class="flex gap-2 justify-center">
+                    <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
+                      สี
+                    </p>
+                    <p class="tw-subtile tw-subtile-4">
+                      {{ car.Color }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="border-t border-gray-200 mt-4"></div>
+              <div class="py-3">
+                <h3 class="mb-3 !mb-0 flex justify-end font-bold">
+                  {{ car.DailyRate }} / วัน
+                </h3>
+              </div>
+            </div>
+            <div class="flex justify-center lg:justify-end gap-2 pb-3">
+              <Button class="bg-primary text-white px-4 py-2 rounded">
+                จองเช่า
+              </Button>
+              <Button class="bg-primary text-white px-4 py-2 rounded">
+                แก้ไขข้อมูล
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -78,7 +126,7 @@ import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { useAuthStore } from '@/stores'
 import { computed, onMounted, ref } from 'vue'
 import type { TCar } from '@/types'
-import { DatePicker, Button, Select } from '@/components'
+import { DatePicker, Button, Select, Icon } from '@/components'
 import { required } from '@/utils/useValidators'
 import { useForm } from '@/utils'
 import NewDialog from '@/components/NewDialog.vue'
@@ -102,6 +150,7 @@ const { state, form, $reset, $validate } = useForm(
 const isLoading = ref(false)
 const isOpen = ref(false)
 const cars = ref<TCar[]>([])
+const carDetails = ref<{ Gear: string; Color: string }[]>([])
 const carNames = ref<{ text: string; value: string }[]>([
   {
     text: 'Toyota',

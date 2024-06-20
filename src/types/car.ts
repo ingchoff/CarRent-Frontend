@@ -5,7 +5,7 @@ export type TCar = {
   Image: string
   Gear: string
   Year: Number
-  Color: String
+  Color: string
   DailyRate: Number
   Available: Boolean
   UserID: Number
