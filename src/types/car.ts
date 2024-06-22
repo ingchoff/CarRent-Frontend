@@ -1,12 +1,12 @@
 export type TCar = {
-  ID: Number
-  Model: String
-  Make: String
+  ID: number
+  Model: string
+  Make: string
   Image: string
   Gear: string
-  Year: Number
+  Year: number
   Color: string
-  DailyRate: Number
+  DailyRate: number
   Available: Boolean
-  UserID: Number
+  UserID: number
 }

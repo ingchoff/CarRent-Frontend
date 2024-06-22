@@ -30,7 +30,7 @@
         >Logout</Button
       >
       <Button
-        class="sm:hidden ml-4"
+        class="sm:hidden ml-4 text-black"
         @click="onShow = !onShow"
         icon="MenuIcon"
       />

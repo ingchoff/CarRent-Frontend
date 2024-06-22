@@ -5,13 +5,9 @@
     </div>
     <div class="dialog-text">
       <div>
+        <ImagePicker></ImagePicker>
         <div class="grid grid-cols-6 gap-2 mt-4">
           <div class="col-span-3">
-            <!-- <TextField
-              label="ยี่ห้อ"
-              v-model="state.make"
-              :errors="form.make.$errors"
-            ></TextField> -->
             <Select
               :items="[{ text: '---โปรดเลือก---', value: '' }, ...carNames]"
               label="ชื่อยี่ห้อ"
@@ -20,14 +16,9 @@
             ></Select>
           </div>
           <div class="col-span-3">
-            <!-- <TextField
-              label="ชื่อรุ่น"
-              v-model="state.make"
-              :errors="form.make.$errors"
-            ></TextField> -->
             <Select
               :items="[{ text: '---โปรดเลือก---', value: '' }, ...carModels]"
-              label="ชื่อยี่ห้อ"
+              label="ชื่อรุ่น"
               v-model="state.model"
               :errors="form.model.$errors"
             ></Select>
@@ -67,37 +58,12 @@
               v-model="state.gear"
               label="เกียร์"
               :items="[
-                { text: 'Manual', value: 'manual' },
-                { text: 'Auto', value: 'auto' },
+                { text: 'manual', value: 'manual' },
+                { text: 'auto', value: 'auto' },
               ]"
               :errors="form.gear.$errors"
             ></Radio>
           </div>
-          <!-- <div class="col-span-3">
-            <span class="text-left font-medium">เกียร์</span>
-            <div class="flex justify-around">
-              <div>
-                <input
-                  type="radio"
-                  id="auto"
-                  value="auto"
-                  v-model="state.gear"
-                />
-                <label for="auto">auto</label>
-              </div>
-              <div class="flex-col">
-                <div>
-                  <input
-                    type="radio"
-                    id="manual"
-                    value="manual"
-                    v-model="state.gear"
-                  />
-                </div>
-                <div><label for="manual">manual</label></div>
-              </div>
-            </div>
-          </div> -->
           <div class="col-span-3 mt-4">
             <TextField
               label="ค่าเช่า/วัน"
@@ -114,7 +80,7 @@
       <Button
         class="bg-primary text-white"
         :loading="loading.save"
-        @click="save"
+        @click="save(props.isEdit)"
         >บันทึก</Button
       >
     </div>
@@ -125,10 +91,12 @@
 import { Button, Dialog, TextField, Select, Radio } from '@/components'
 import { API_STOCK } from '@/config'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
+import { useCarStore } from '@/stores'
 import type { TCar } from '@/types'
 import { useForm, useLoading, useAlert } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, ref, watch } from 'vue'
+import ImagePicker from './ImagePicker.vue'
 
 interface IProps {
   title: string
@@ -141,6 +109,7 @@ const emit = defineEmits(['onClose'])
 
 const { loading, updateLoading } = useLoading()
 const { updateAlert } = useAlert()
+const carsStore = useCarStore()
 const { state, form, $reset, $validate } = useForm(
   {
     make: '',
@@ -183,15 +152,15 @@ const carColors = ref<{ text: string; value: string }[]>([
   { text: 'White', value: 'white' },
 ])
 
-const save = async () => {
-  if (await $validate()) {
+const save = async (isEdit: boolean, cid?: string) => {
+  if ((await $validate()) && !isEdit) {
     updateLoading({ save: true })
     const addCar = await fetchWrapper.post(`${API_STOCK}/car/new`, {
       Model: state.model,
       Make: state.make,
       Color: state.color,
       Year: parseInt(state.year),
-      DailyRate: parseFloat(state.dailyRate),
+      DailyRate: state.dailyRate,
       Image: '',
       Gear: state.gear,
     })
@@ -200,7 +169,28 @@ const save = async () => {
       updateAlert({ type: 'success', message: 'เพิ่มรถสำเร็จ!' })
       await close()
     } else {
-      console.log(addCar)
+      updateLoading({ save: false })
+      updateAlert({ type: 'error', message: 'เพิ่มรถไม่สำเร็จ!' })
+    }
+  } else if ((await $validate()) && isEdit) {
+    updateLoading({ save: true })
+    const updateCar = await fetchWrapper.put(
+      `${API_STOCK}/car/${props.car?.ID}`,
+      {
+        Model: state.model,
+        Make: state.make,
+        Color: state.color,
+        Year: parseInt(state.year),
+        DailyRate: parseFloat(state.dailyRate),
+        Image: '',
+        Gear: state.gear,
+      }
+    )
+    if (updateCar) {
+      updateLoading({ save: false })
+      updateAlert({ type: 'success', message: 'เพิ่มรถสำเร็จ!' })
+      await close()
+    } else {
       updateLoading({ save: false })
       updateAlert({ type: 'error', message: 'เพิ่มรถไม่สำเร็จ!' })
     }
@@ -209,7 +199,7 @@ const save = async () => {
 const close = async () => {
   isNewColor.value = false
   await $reset()
-  emit('onClose')
+  emit('onClose', props.isEdit)
 }
 
 watch(
@@ -218,6 +208,20 @@ watch(
     if (newColor === 'new') {
       isNewColor.value = true
       state.color = ''
+    }
+  }
+)
+
+watch(
+  () => props.car,
+  (newCar) => {
+    if (newCar) {
+      state.model = newCar.Model
+      state.make = newCar.Make
+      state.year = newCar.Year.toString()
+      state.color = newCar.Color
+      state.gear = newCar.Gear
+      state.dailyRate = newCar.DailyRate.toString()
     }
   }
 )
