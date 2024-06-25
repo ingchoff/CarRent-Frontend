@@ -5,11 +5,14 @@
     </div>
     <div class="dialog-text">
       <div>
-        <ImagePicker></ImagePicker>
+        <ImagePicker @selectImage="getImgUrl"></ImagePicker>
         <div class="grid grid-cols-6 gap-2 mt-4">
           <div class="col-span-3">
             <Select
-              :items="[{ text: '---โปรดเลือก---', value: '' }, ...carNames]"
+              :items="[
+                { text: '---โปรดเลือก---', value: '' },
+                ...props.carMakes,
+              ]"
               label="ชื่อยี่ห้อ"
               v-model="state.make"
               :errors="form.make.$errors"
@@ -17,7 +20,10 @@
           </div>
           <div class="col-span-3">
             <Select
-              :items="[{ text: '---โปรดเลือก---', value: '' }, ...carModels]"
+              :items="[
+                { text: '---โปรดเลือก---', value: '' },
+                ...props.carModels,
+              ]"
               label="ชื่อรุ่น"
               v-model="state.model"
               :errors="form.model.$errors"
@@ -103,6 +109,8 @@ interface IProps {
   isEdit: boolean
   isOpen: boolean
   car?: TCar
+  carMakes: { text: string; value: string }[]
+  carModels: { text: string; value: string }[]
 }
 const props = defineProps<IProps>()
 const emit = defineEmits(['onClose'])
@@ -132,18 +140,7 @@ const { state, form, $reset, $validate } = useForm(
 )
 
 const isNewColor = ref(false)
-const carNames = ref<{ text: string; value: string }[]>([
-  {
-    text: 'Toyota',
-    value: 'toyota',
-  },
-])
-const carModels = ref<{ text: string; value: string }[]>([
-  {
-    text: 'yaris cross',
-    value: 'yaris cross',
-  },
-])
+const image = ref<string>('')
 const carColors = ref<{ text: string; value: string }[]>([
   { text: 'Red', value: 'red' },
   { text: 'Blue', value: 'blue' },
@@ -152,7 +149,7 @@ const carColors = ref<{ text: string; value: string }[]>([
   { text: 'White', value: 'white' },
 ])
 
-const save = async (isEdit: boolean, cid?: string) => {
+const save = async (isEdit: boolean) => {
   if ((await $validate()) && !isEdit) {
     updateLoading({ save: true })
     const addCar = await fetchWrapper.post(`${API_STOCK}/car/new`, {
@@ -161,7 +158,7 @@ const save = async (isEdit: boolean, cid?: string) => {
       Color: state.color,
       Year: parseInt(state.year),
       DailyRate: state.dailyRate,
-      Image: '',
+      Image: image.value,
       Gear: state.gear,
     })
     if (addCar) {
@@ -182,7 +179,7 @@ const save = async (isEdit: boolean, cid?: string) => {
         Color: state.color,
         Year: parseInt(state.year),
         DailyRate: parseFloat(state.dailyRate),
-        Image: '',
+        Image: image.value,
         Gear: state.gear,
       }
     )
@@ -196,10 +193,15 @@ const save = async (isEdit: boolean, cid?: string) => {
     }
   }
 }
+
 const close = async () => {
   isNewColor.value = false
   await $reset()
   emit('onClose', props.isEdit)
+}
+
+const getImgUrl = (url: string) => {
+  image.value = url
 }
 
 watch(

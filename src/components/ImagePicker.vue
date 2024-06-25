@@ -46,6 +46,7 @@ import { useAlert } from '@/utils'
 import { ref } from 'vue'
 
 const { updateAlert } = useAlert()
+const emit = defineEmits(['selectImage'])
 
 const file = ref()
 const imgUrl = ref<string>('')
@@ -58,6 +59,7 @@ const selectedFile = (event: any) => {
   if (filetype === 'jpeg' || filetype === 'png') {
     haveImg.value = true
     imgUrl.value = URL.createObjectURL(fileSelected)
+    emit('selectImage', imgUrl.value)
   } else {
     updateAlert({ type: 'warning', message: 'Not supported file!' })
   }
@@ -67,6 +69,7 @@ const cancel = () => {
   file.value = undefined
   imgUrl.value = ''
   haveImg.value = false
+  emit('selectImage', imgUrl.value)
 }
 </script>
 

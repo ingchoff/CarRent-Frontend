@@ -4,6 +4,8 @@
       :title="'เพิ่มรถให้เช่า'"
       :isOpen="isOpen"
       :isEdit="false"
+      :carMakes="carNames"
+      :carModels="carModels"
       @onClose="closeDialog"
     />
     <NewDialog
@@ -11,6 +13,8 @@
       :isOpen="isShowEdit"
       :isEdit="true"
       :car="carInfo"
+      :carMakes="carNames"
+      :carModels="carModels"
       @onClose="closeDialog"
     />
     <div class="flex justify-center">
@@ -31,7 +35,7 @@
       </Button>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-4">
-      <div class="lg:block p-4 bg-secondary rounded lg:h-64">
+      <div class="lg:flex-row gap-2 p-4 bg-secondary rounded lg:h-72">
         <Select
           :items="[{ text: '---Select---', value: '' }, ...carNames]"
           label="ชื่อยี่ห้อ"
@@ -46,6 +50,11 @@
           :labelColor="'white'"
           :errors="form.model.$errors"
         ></Select>
+        <div class="flex justify-center">
+          <Button class="bg-primary text-white px-4 py-2 rounded border-0"
+            >กรอง</Button
+          >
+        </div>
       </div>
       <div class="col-span-3">
         <div
@@ -60,17 +69,21 @@
               class="h-64 object-cover p-4 lg:p-0 rounded-md"
             />
           </div>
-          <div class="flex flex-col justify-between lg:ml-3 w-full">
+          <div class="flex flex-col justify-around lg:ml-3 w-full">
             <div class="px-3 lg:px-0">
               <div class="mb-3 md:flex-row md:justify-between mt-6 lg:mt-0">
                 <div class="flex flex-row justify-between">
                   <h3 class="text-lg font-semibold uppercase">
                     {{ car.Make }} {{ car.Model }} ({{ car.Year }})
+                    {{ car.SubModel }}
+                  </h3>
+                  <h3 class="text-lg font-semibold uppercase text-gray-500">
+                    {{ car.License }}
                   </h3>
                 </div>
               </div>
               <div
-                class="space-y-6 bg-white p-4 lg:space-y-4 lg:px-0 rounded-md lg:w-80"
+                class="space-y-6 bg-white p-4 lg:space-y-4 rounded-md lg:w-1/2"
               >
                 <div
                   class="grid grid-cols-2 gap-4 md:gap-4 sm:gap-6 grid-cols-2"
@@ -83,6 +96,12 @@
                       <p>รายละเอียด</p>
                     </div>
                   </div>
+                  <div class="flex gap-1 justify-center">
+                    <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
+                      เครื่อง
+                    </p>
+                    <p class="tw-subtile tw-subtile-4">{{ car.Engine }} cc</p>
+                  </div>
                   <div class="flex gap-2 justify-center">
                     <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
                       เกียร์
@@ -91,7 +110,6 @@
                       {{ car.Gear }}
                     </p>
                   </div>
-
                   <div class="flex gap-2 justify-center">
                     <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
                       สี
@@ -100,16 +118,33 @@
                       {{ car.Color }}
                     </p>
                   </div>
+
+                  <div class="flex gap-2 justify-center">
+                    <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
+                      ประตู
+                    </p>
+                    <p class="tw-subtile tw-subtile-4">{{ car.Door }}</p>
+                  </div>
+                  <div class="flex gap-2 justify-center">
+                    <p class="text-gray-500 tw-subtile tw-subtile-5 font-bold">
+                      เชื้อเพลิง
+                    </p>
+                    <p class="tw-subtile tw-subtile-4">
+                      {{ car.Fuel }}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div class="border-t border-gray-200 mt-4"></div>
-              <div class="py-3">
+              <div class="border-t border-gray-200 my-4"></div>
+              <div class="py-3 lg:py-0">
                 <h3 class="flex justify-end font-bold">
                   {{ car.DailyRate }} / วัน
                 </h3>
               </div>
             </div>
-            <div class="flex justify-center lg:justify-end gap-2 pb-3 lg:pb-0">
+            <div
+              class="flex justify-center lg:justify-end gap-2 pb-3 lg:pb-0 lg:pt-2"
+            >
               <Button class="bg-primary text-white px-4 py-2 rounded">
                 จองเช่า
               </Button>
@@ -129,13 +164,15 @@
 
 <script setup lang="ts">
 import Loading from 'vue-loading-overlay'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { TCar } from '@/types'
 import { Button, Select, Icon } from '@/components'
 import { required } from '@/utils/useValidators'
 import { useForm } from '@/utils'
 import { useCarStore } from '@/stores'
 import NewDialog from '@/components/NewDialog.vue'
+import { fetchWrapper } from '@/helpers/fetchWrapper'
+import { API_STOCK } from '@/config'
 
 const carsStore = useCarStore()
 const { state, form, $reset, $validate } = useForm(
@@ -159,18 +196,11 @@ const isShowEdit = ref(false)
 const cars = ref<TCar[]>([])
 const carInfo = ref<TCar>()
 const carDetails = ref<{ Gear: string; Color: string }[]>([])
-const carNames = ref<{ text: string; value: string }[]>([
-  {
-    text: 'Toyota',
-    value: 'toyota',
-  },
-])
-const carModels = ref<{ text: string; value: string }[]>([
-  {
-    text: 'yaris cross',
-    value: 'yaris cross',
-  },
-])
+const carNames = ref<{ text: string; value: string }[]>([])
+const carModels = ref<{ text: string; value: string }[]>([])
+const masterModelsData = ref<{ Make: { [key: string]: string[] } }>({
+  Make: {},
+})
 
 const getListCars = async () => {
   isLoading.value = true
@@ -181,11 +211,28 @@ const getListCars = async () => {
       'https://nexenthailand.com/wp-content/uploads/2023/11/Toyota-Yaris-Cross.jpg'
   })
   isLoading.value = false
-  console.log(cars.value)
+}
+
+const getModelNames = async () => {
+  const modelsData = await fetchWrapper.get(`${API_STOCK}/cars/models-data`, '')
+  if (modelsData) {
+    masterModelsData.value = modelsData.data
+    Object.keys(masterModelsData.value.Make).map((k) => {
+      carNames.value.push({ text: k, value: k })
+    })
+  }
 }
 
 const openEdit = async (c: TCar) => {
+  carNames.value = []
+  carModels.value = []
   carInfo.value = c
+  Object.keys(masterModelsData.value.Make).map((make) => {
+    carNames.value.push({ text: make, value: make })
+    masterModelsData.value.Make[make].map((model) => {
+      carModels.value.push({ text: model, value: model })
+    })
+  })
   isShowEdit.value = true
 }
 
@@ -197,6 +244,7 @@ const closeDialog = async (isUpdated: boolean) => {
   isOpen.value = false
   carInfo.value = undefined
   isShowEdit.value = false
+  carModels.value = []
   if (isUpdated) {
     await getListCars()
   }
@@ -204,6 +252,19 @@ const closeDialog = async (isUpdated: boolean) => {
 
 onMounted(async () => {
   await getListCars()
+  await getModelNames()
 })
+
+watch(
+  () => state.make,
+  (newMake, prevMake) => {
+    if (newMake !== prevMake) {
+      carModels.value = []
+      masterModelsData.value.Make[newMake].map((model) => {
+        carModels.value.push({ text: model, value: model })
+      })
+    }
+  }
+)
 </script>
 <style lang="scss" scoped></style>
