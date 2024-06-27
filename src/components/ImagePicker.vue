@@ -6,7 +6,7 @@
       >
       <div class="flex items-center justify-center w-full">
         <label
-          v-if="!haveImg"
+          v-if="!haveImg && !props.prevImg"
           class="flex flex-col w-full h-32 border-4 border-dashed hover:bg-gray-100 hover:border-gray-300"
         >
           <div class="flex flex-col items-center justify-center pt-7">
@@ -45,11 +45,16 @@ import { Button } from '@/components'
 import { useAlert } from '@/utils'
 import { ref } from 'vue'
 
+interface IProps {
+  prevImg?: string
+}
+const props = defineProps<IProps>()
+
 const { updateAlert } = useAlert()
 const emit = defineEmits(['selectImage'])
 
 const file = ref()
-const imgUrl = ref<string>('')
+const imgUrl = ref<string | undefined>(props.prevImg)
 const haveImg = ref(false)
 
 const selectedFile = (event: any) => {
@@ -59,7 +64,8 @@ const selectedFile = (event: any) => {
   if (filetype === 'jpeg' || filetype === 'png') {
     haveImg.value = true
     imgUrl.value = URL.createObjectURL(fileSelected)
-    emit('selectImage', imgUrl.value)
+    console.log(file.value)
+    emit('selectImage', file.value)
   } else {
     updateAlert({ type: 'warning', message: 'Not supported file!' })
   }

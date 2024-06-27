@@ -5,8 +5,19 @@
     </div>
     <div class="dialog-text">
       <div>
-        <ImagePicker @selectImage="getImgUrl"></ImagePicker>
+        <ImagePicker
+          :prevImg="state.image"
+          @selectImage="getImgUrl"
+        ></ImagePicker>
         <div class="grid grid-cols-6 gap-2 mt-4">
+          <div class="col-span-3">
+            <TextField
+              label="เลขทะเบียน"
+              v-model="state.license"
+              placeholder="1.5G"
+              :errors="form.license.$errors"
+            ></TextField>
+          </div>
           <div class="col-span-3">
             <Select
               :items="[
@@ -31,12 +42,29 @@
           </div>
           <div class="col-span-3">
             <TextField
+              label="รุ่นย่อย"
+              v-model="state.subModel"
+              placeholder="1.5G"
+              :errors="form.subModel.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-3">
+            <TextField
               label="ปี"
               v-model="state.year"
               type="Number"
               placeholder="ปีค.ศ. (yyyy)"
               :prependIcon="'CalendarIcon'"
               :errors="form.year.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-3">
+            <TextField
+              label="ขนาดเครื่อง"
+              v-model="state.engine"
+              type="number"
+              placeholder="1xxx"
+              :errors="form.engine.$errors"
             ></TextField>
           </div>
           <div class="col-span-3">
@@ -70,7 +98,22 @@
               :errors="form.gear.$errors"
             ></Radio>
           </div>
-          <div class="col-span-3 mt-4">
+          <div class="col-span-3">
+            <TextField
+              label="ประตู"
+              v-model="state.door"
+              type="Number"
+              :errors="form.door.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-3">
+            <TextField
+              label="เชื้อเพลง"
+              v-model="state.fuel"
+              :errors="form.fuel.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-3">
             <TextField
               label="ค่าเช่า/วัน"
               v-model="state.dailyRate"
@@ -103,6 +146,13 @@ import { useForm, useLoading, useAlert } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, ref, watch } from 'vue'
 import ImagePicker from './ImagePicker.vue'
+import {
+  getDownloadURL,
+  getStorage,
+  ref as stRef,
+  uploadBytes,
+} from 'firebase/storage'
+import { getApp } from 'firebase/app'
 
 interface IProps {
   title: string
@@ -115,6 +165,8 @@ interface IProps {
 const props = defineProps<IProps>()
 const emit = defineEmits(['onClose'])
 
+const firebaseApp = getApp()
+const storage = getStorage(firebaseApp, 'gs://ocrcard-a14f6.appspot.com')
 const { loading, updateLoading } = useLoading()
 const { updateAlert } = useAlert()
 const carsStore = useCarStore()
@@ -122,25 +174,37 @@ const { state, form, $reset, $validate } = useForm(
   {
     make: '',
     model: '',
+    subModel: '',
     year: '',
     color: '',
     dailyRate: '',
     gear: '',
+    door: '',
+    fuel: '',
+    license: '',
+    engine: '',
+    image: '',
   },
   computed(() => {
     return {
       make: { required },
       model: { required },
+      subModel: { required },
       year: { required },
       color: { required },
       dailyRate: { required },
       gear: { required },
+      door: { required },
+      fuel: { required },
+      license: { required },
+      engine: { required },
+      image: { required },
     }
   })
 )
 
 const isNewColor = ref(false)
-const image = ref<string>('')
+const fileImg = ref()
 const carColors = ref<{ text: string; value: string }[]>([
   { text: 'Red', value: 'red' },
   { text: 'Blue', value: 'blue' },
@@ -149,17 +213,41 @@ const carColors = ref<{ text: string; value: string }[]>([
   { text: 'White', value: 'white' },
 ])
 
+const uploadImage = async () => {
+  const metadata = {
+    contentType: 'image/jpeg',
+  }
+  const storageRef = stRef(storage, `CarRent/${state.image}`)
+  const uploadTask = await uploadBytes(storageRef, fileImg.value, metadata)
+  if (uploadTask) {
+    try {
+      const downloadUrl = await getDownloadURL(storageRef)
+      state.image = downloadUrl
+      updateAlert({ type: 'success', message: 'อัพโหลดรูปสำเร็จ!' })
+    } catch (error: any) {
+      updateAlert({ type: 'error', message: error.code })
+    }
+  } else {
+    updateAlert({ type: 'error', message: 'อัพโหลดรูปไม่สำเร็จ!' })
+  }
+}
+
 const save = async (isEdit: boolean) => {
   if ((await $validate()) && !isEdit) {
     updateLoading({ save: true })
     const addCar = await fetchWrapper.post(`${API_STOCK}/car/new`, {
       Model: state.model,
+      SubModel: state.subModel,
       Make: state.make,
       Color: state.color,
       Year: parseInt(state.year),
-      DailyRate: state.dailyRate,
-      Image: image.value,
+      DailyRate: parseFloat(state.dailyRate),
+      Image: state.image,
       Gear: state.gear,
+      Fuel: state.fuel,
+      Engine: state.engine,
+      Door: parseInt(state.door),
+      License: state.license,
     })
     if (addCar) {
       updateLoading({ save: false })
@@ -175,12 +263,17 @@ const save = async (isEdit: boolean) => {
       `${API_STOCK}/car/${props.car?.ID}`,
       {
         Model: state.model,
+        SubModel: state.subModel,
         Make: state.make,
         Color: state.color,
         Year: parseInt(state.year),
         DailyRate: parseFloat(state.dailyRate),
-        Image: image.value,
+        Image: state.image,
         Gear: state.gear,
+        Fuel: state.fuel,
+        Engine: state.engine,
+        Door: parseInt(state.door),
+        License: state.license,
       }
     )
     if (updateCar) {
@@ -200,8 +293,13 @@ const close = async () => {
   emit('onClose', props.isEdit)
 }
 
-const getImgUrl = (url: string) => {
-  image.value = url
+const getImgUrl = async (file: any) => {
+  state.image = file.name
+  fileImg.value = file
+  if (!fileImg.value) {
+    return
+  }
+  await uploadImage()
 }
 
 watch(
@@ -224,6 +322,12 @@ watch(
       state.color = newCar.Color
       state.gear = newCar.Gear
       state.dailyRate = newCar.DailyRate.toString()
+      state.subModel = newCar.SubModel
+      state.fuel = newCar.Fuel
+      state.door = newCar.Door.toString()
+      state.license = newCar.License
+      state.engine = newCar.Engine
+      state.image = newCar.Image
     }
   }
 )

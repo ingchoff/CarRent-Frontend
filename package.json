@@ -17,6 +17,7 @@
     "@vuelidate/validators": "^2.0.0",
     "date-fns": "^2.24.0",
     "date-fns-tz": "^1.1.6",
+    "firebase": "^10.12.2",
     "pinia": "^2.0.21",
     "v-calendar": "^3.1.2",
     "vue": "^3.4.21",

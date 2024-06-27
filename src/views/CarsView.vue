@@ -66,7 +66,7 @@
             <img
               :src="car.Image"
               alt="Car Image"
-              class="h-64 object-cover p-4 lg:p-0 rounded-md"
+              class="h-64 w-96 object-cover p-4 lg:p-0 rounded-md"
             />
           </div>
           <div class="flex flex-col justify-around lg:ml-3 w-full">
@@ -173,6 +173,7 @@ import { useCarStore } from '@/stores'
 import NewDialog from '@/components/NewDialog.vue'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { API_STOCK } from '@/config'
+import { firebase } from '@/main'
 
 const carsStore = useCarStore()
 const { state, form, $reset, $validate } = useForm(
@@ -195,7 +196,6 @@ const isOpen = ref(false)
 const isShowEdit = ref(false)
 const cars = ref<TCar[]>([])
 const carInfo = ref<TCar>()
-const carDetails = ref<{ Gear: string; Color: string }[]>([])
 const carNames = ref<{ text: string; value: string }[]>([])
 const carModels = ref<{ text: string; value: string }[]>([])
 const masterModelsData = ref<{ Make: { [key: string]: string[] } }>({
@@ -206,10 +206,6 @@ const getListCars = async () => {
   isLoading.value = true
   await carsStore.getCars()
   cars.value = carsStore.cars
-  cars.value.map((c) => {
-    c.Image =
-      'https://nexenthailand.com/wp-content/uploads/2023/11/Toyota-Yaris-Cross.jpg'
-  })
   isLoading.value = false
 }
 
@@ -237,6 +233,12 @@ const openEdit = async (c: TCar) => {
 }
 
 const openDialog = async () => {
+  Object.keys(masterModelsData.value.Make).map((make) => {
+    carNames.value.push({ text: make, value: make })
+    masterModelsData.value.Make[make].map((model) => {
+      carModels.value.push({ text: model, value: model })
+    })
+  })
   isOpen.value = true
 }
 
@@ -246,6 +248,8 @@ const closeDialog = async (isUpdated: boolean) => {
   isShowEdit.value = false
   carModels.value = []
   if (isUpdated) {
+    await getListCars()
+  } else {
     await getListCars()
   }
 }
