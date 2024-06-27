@@ -6,7 +6,8 @@
     <div class="dialog-text">
       <div>
         <ImagePicker
-          :prevImg="state.image"
+          :isUpdate="props.isEdit"
+          :prevImg="props.car?.Image"
           @selectImage="getImgUrl"
         ></ImagePicker>
         <div class="grid grid-cols-6 gap-2 mt-4">
@@ -14,7 +15,6 @@
             <TextField
               label="เลขทะเบียน"
               v-model="state.license"
-              placeholder="1.5G"
               :errors="form.license.$errors"
             ></TextField>
           </div>
@@ -147,6 +147,7 @@ import { required } from '@/utils/useValidators'
 import { computed, ref, watch } from 'vue'
 import ImagePicker from './ImagePicker.vue'
 import {
+  deleteObject,
   getDownloadURL,
   getStorage,
   ref as stRef,
@@ -217,24 +218,39 @@ const uploadImage = async () => {
   const metadata = {
     contentType: 'image/jpeg',
   }
-  const storageRef = stRef(storage, `CarRent/${state.image}`)
-  const uploadTask = await uploadBytes(storageRef, fileImg.value, metadata)
-  if (uploadTask) {
-    try {
-      const downloadUrl = await getDownloadURL(storageRef)
-      state.image = downloadUrl
-      updateAlert({ type: 'success', message: 'อัพโหลดรูปสำเร็จ!' })
-    } catch (error: any) {
-      updateAlert({ type: 'error', message: error.code })
+  if (fileImg.value) {
+    const storageRef = stRef(storage, `CarRent/${fileImg.value.name}`)
+    const uploadTask = await uploadBytes(storageRef, fileImg.value, metadata)
+    if (uploadTask) {
+      try {
+        const downloadUrl = await getDownloadURL(storageRef)
+        state.image = downloadUrl
+        updateAlert({ type: 'success', message: 'อัพโหลดรูปสำเร็จ!' })
+      } catch (error: any) {
+        updateAlert({ type: 'error', message: error.code })
+      }
+    } else {
+      updateAlert({ type: 'error', message: 'อัพโหลดรูปไม่สำเร็จ!' })
     }
-  } else {
-    updateAlert({ type: 'error', message: 'อัพโหลดรูปไม่สำเร็จ!' })
+  }
+}
+
+const deleteImage = async () => {
+  const url = new URL(state.image)
+  const pathname = decodeURIComponent(url.pathname)
+  const prevFileName = pathname.substring(pathname.lastIndexOf('/') + 1)
+  const storageRef = stRef(storage, `CarRent/${prevFileName}`)
+  try {
+    await deleteObject(storageRef)
+  } catch (error: any) {
+    updateAlert({ type: 'error', message: error })
   }
 }
 
 const save = async (isEdit: boolean) => {
   if ((await $validate()) && !isEdit) {
     updateLoading({ save: true })
+    await uploadImage()
     const addCar = await fetchWrapper.post(`${API_STOCK}/car/new`, {
       Model: state.model,
       SubModel: state.subModel,
@@ -259,6 +275,8 @@ const save = async (isEdit: boolean) => {
     }
   } else if ((await $validate()) && isEdit) {
     updateLoading({ save: true })
+    await deleteImage()
+    await uploadImage()
     const updateCar = await fetchWrapper.put(
       `${API_STOCK}/car/${props.car?.ID}`,
       {
@@ -293,13 +311,13 @@ const close = async () => {
   emit('onClose', props.isEdit)
 }
 
-const getImgUrl = async (file: any) => {
-  state.image = file.name
-  fileImg.value = file
-  if (!fileImg.value) {
-    return
+const getImgUrl = async (file: any, isUpdated: boolean) => {
+  if (!isUpdated) {
+    state.image = file.name
+    fileImg.value = file
+  } else {
+    fileImg.value = file
   }
-  await uploadImage()
 }
 
 watch(

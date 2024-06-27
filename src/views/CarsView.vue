@@ -234,7 +234,6 @@ const openEdit = async (c: TCar) => {
 
 const openDialog = async () => {
   Object.keys(masterModelsData.value.Make).map((make) => {
-    carNames.value.push({ text: make, value: make })
     masterModelsData.value.Make[make].map((model) => {
       carModels.value.push({ text: model, value: model })
     })
