@@ -145,8 +145,11 @@
             <div
               class="flex justify-center lg:justify-end gap-2 pb-3 lg:pb-0 lg:pt-2"
             >
-              <Button class="bg-primary text-white px-4 py-2 rounded">
-                จองเช่า
+              <Button
+                class="bg-primary text-white px-4 py-2 rounded"
+                @click="$router.push(`/inspections/${car.License}`)"
+              >
+                ตรวจสอบรถ
               </Button>
               <Button
                 class="bg-primary text-white px-4 py-2 rounded"
@@ -170,7 +173,7 @@ import { Button, Select, Icon } from '@/components'
 import { required } from '@/utils/useValidators'
 import { useForm } from '@/utils'
 import { useCarStore } from '@/stores'
-import NewDialog from '@/components/NewDialog.vue'
+import NewDialog from '@/components/car/NewDialog.vue'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { API_STOCK } from '@/config'
 import { firebase } from '@/main'

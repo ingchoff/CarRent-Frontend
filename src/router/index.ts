@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AboutView from '../views/AboutView.vue'
 import CarsView from '../views/CarsView.vue'
+import InspectionsView from '../views/Inspections.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import { useAuthStore } from '@/stores'
@@ -32,6 +33,11 @@ const router = createRouter({
       path: '/cars',
       name: 'cars',
       component: CarsView,
+    },
+    {
+      path: '/inspections/:id',
+      name: 'inspections',
+      component: InspectionsView,
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

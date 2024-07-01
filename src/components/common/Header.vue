@@ -54,11 +54,6 @@ const menu = [
     to: '/cars',
   },
   {
-    header: 'เช่ารถ',
-    icon: 'PhotographIcon',
-    to: '/rentals',
-  },
-  {
     header: 'About',
     icon: 'InformationCircleIcon',
     to: '/about',

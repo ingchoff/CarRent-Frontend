@@ -5,6 +5,11 @@
     </div>
     <div class="dialog-text">
       <div>
+        <ImagePicker
+          :isUpdate="props.isEdit"
+          :prevImg="props.car?.Image"
+          @selectImage="getImgUrl"
+        ></ImagePicker>
         <div class="grid grid-cols-6 gap-2 mt-4">
           <div class="col-span-3">
             <TextField
@@ -140,6 +145,7 @@ import type { TCar } from '@/types'
 import { useForm, useLoading, useAlert } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, ref, watch } from 'vue'
+import ImagePicker from '../ImagePicker.vue'
 import {
   deleteObject,
   getDownloadURL,

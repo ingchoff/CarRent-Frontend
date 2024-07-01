@@ -61,6 +61,7 @@ const emit = defineEmits(['selectImage'])
 const file = ref()
 const imgUrl = ref<string>('')
 const haveImg = ref(false)
+const isChangeImg = ref(false)
 
 const selectedFile = (event: any) => {
   const fileSelected = event.target.files[0]
@@ -68,9 +69,10 @@ const selectedFile = (event: any) => {
   const filetype = fileSelected['type'].split('/')[1]
   if (filetype === 'jpeg' || filetype === 'png') {
     haveImg.value = true
+    isChangeImg.value = true
     imgUrl.value = URL.createObjectURL(fileSelected)
     console.log(file.value)
-    emit('selectImage', file.value, props.isUpdate)
+    emit('selectImage', file.value, props.isUpdate, isChangeImg.value)
   } else {
     updateAlert({ type: 'warning', message: 'Not supported file!' })
   }
@@ -78,7 +80,6 @@ const selectedFile = (event: any) => {
 
 const cancel = async () => {
   if (props.isUpdate) {
-    console.log(1)
     file.value = undefined
     haveImg.value = false
     emit('selectImage', undefined, props.isUpdate)
