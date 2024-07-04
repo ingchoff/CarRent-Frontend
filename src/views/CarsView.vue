@@ -147,7 +147,7 @@
             >
               <Button
                 class="bg-primary text-white px-4 py-2 rounded"
-                @click="$router.push(`/inspections/${car.License}`)"
+                @click="openInspection(car)"
               >
                 ตรวจสอบรถ
               </Button>
@@ -172,13 +172,15 @@ import type { TCar } from '@/types'
 import { Button, Select, Icon } from '@/components'
 import { required } from '@/utils/useValidators'
 import { useForm } from '@/utils'
-import { useCarStore } from '@/stores'
+import { useCarStore, useInspectionStore } from '@/stores'
 import NewDialog from '@/components/car/NewDialog.vue'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { API_STOCK } from '@/config'
-import { firebase } from '@/main'
+import { useRouter } from 'vue-router'
 
 const carsStore = useCarStore()
+const insStore = useInspectionStore()
+const router = useRouter()
 const { state, form, $reset, $validate } = useForm(
   {
     startDate: '',
@@ -254,6 +256,11 @@ const closeDialog = async (isUpdated: boolean) => {
   } else {
     await getListCars()
   }
+}
+
+const openInspection = (car: TCar) => {
+  insStore.cidSeleted = car.ID.toString()
+  router.push(`/inspections/${car.License}`)
 }
 
 onMounted(async () => {

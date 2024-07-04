@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto py-4 lg:py-10 text-center">
     <NewDialog
-      :title="'เพิ่มรถให้เช่า'"
+      title="เพิ่มรายการ"
       :isOpen="isOpen"
       :isEdit="false"
       @onClose="closeDialog"
@@ -21,14 +21,14 @@
           <div class="text-white">Services</div>
           <div class="border-t border-gray-200 my-4"></div>
           <ComboBox
-            label="services"
+            placeholder="เลือก services"
             v-model="state.seletedServices"
             :items="services"
           ></ComboBox>
-          <div class="text-white">Book</div>
+          <div class="text-white mt-4">Book</div>
           <div class="border-t border-gray-200 my-4"></div>
           <ComboBox
-            label="books"
+            placeholder="เลือก books"
             v-model="state.seletedBooks"
             :items="books"
           ></ComboBox>
@@ -54,16 +54,22 @@
                 <Icon type="custom" name="loading" class="mx-auto"></Icon>
               </td>
             </tr>
-            <tr v-else-if="inspections.length === 0">
-              <td colspan="100%" class="text-center">No Inspections Found.</td>
+            <tr v-else-if="insStore.inspections.length === 0">
+              <td colspan="100%" class="text-center">ไม่พบรายการ</td>
             </tr>
             <template v-else>
-              <tr v-for="ins in inspections" :key="ins.id">
-                <td>{{ ins.inspectionDate }}</td>
-                <td>{{ ins.name }}</td>
-                <td class="text-center">{{ ins.type }}</td>
-                <td class="text-center">{{ ins.amount }}</td>
-                <td class="text-center">{{ ins.note }}%</td>
+              <tr v-for="ins in insStore.inspections" :key="ins.ID">
+                <td class="text-start">
+                  {{ dateTimeFormat(ins.InspectionDate, 'dd/MM/yyyy') }}
+                </td>
+                <td>{{ ins.Name }}</td>
+                <td>{{ ins.Type }}</td>
+                <td class="text-start">{{ ins.Mileage }}</td>
+                <td class="text-start">{{ ins.Amount }}</td>
+
+                <td class="text-wrap">
+                  {{ ins.Description }}
+                </td>
               </tr>
             </template>
           </tbody>
@@ -74,12 +80,13 @@
 </template>
 
 <script setup lang="ts">
-import { ComboBox, Table } from '@/components'
-import NewDialog from '@/components/car/NewDialog.vue'
+import { ComboBox, Table, Button, Icon } from '@/components'
+import NewDialog from '@/components/inspection/NewDialog.vue'
+import { useInspectionStore } from '@/stores'
 import type { TInspection } from '@/types'
-import { useForm, useLoading } from '@/utils'
+import { useDateFns, useForm, useLoading } from '@/utils'
 import { required } from '@/utils/useValidators'
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const services = ref<{ text: string; value: any }[]>([
   {
@@ -141,19 +148,20 @@ const books = ref<{ text: string; value: string }[]>([
     value: 'ต่อภาษี',
   },
 ])
-const inspections = ref<TInspection[]>([])
 const isOpen = ref(false)
 
 const headers = [
-  { title: 'Date' },
-  { title: 'Name', class: 'text-center' },
-  { title: 'Type', class: 'text-center' },
-  { title: 'Mileage' },
-  { title: 'Amount' },
-  { title: 'Note', class: 'text-center' },
+  { title: 'วันที่' },
+  { title: 'ชื่อรายการ', class: 'text-center' },
+  { title: 'ประเภท', class: 'text-center' },
+  { title: 'ไมล์' },
+  { title: 'ราคา' },
+  { title: 'รายละเอียด', class: 'text-center' },
 ]
 
 const { loading } = useLoading()
+const insStore = useInspectionStore()
+const { dateTimeFormat } = useDateFns()
 const { state, form, $reset, $validate } = useForm(
   {
     seletedServices: [],
@@ -178,4 +186,12 @@ const openDialog = () => {
 const closeDialog = () => {
   isOpen.value = false
 }
+
+const getListInspections = async () => {
+  await insStore.getInspections()
+}
+
+onMounted(async () => {
+  await getListInspections()
+})
 </script>

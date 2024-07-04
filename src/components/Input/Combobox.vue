@@ -1,5 +1,6 @@
 <template>
   <Combobox v-model="selected" nullable>
+    <ComboboxLabel v-if="label">{{ label }}</ComboboxLabel>
     <!-- <ul v-if="selected.length > 0">
       <li v-for="person in selected" :key="person.text" class="text-white">
         {{ person.text }}
@@ -7,9 +8,10 @@
     </ul> -->
     <div class="relative">
       <ComboboxInput
-        :placeholder="props.label"
+        :placeholder="props.placeholder"
         v-bind="attrs"
         class="w-full h-auto pr-10 leading-6 text-gray-900"
+        :class="{ error: errors.length }"
         :displayValue="(person:any) => person?.text"
         @change="query = $event.target.value"
       />
@@ -71,11 +73,15 @@
       </TransitionRoot>
     </div>
   </Combobox>
+  <div v-if="!hideDetails" class="input-error">
+    <span v-if="errors.length">{{ errors[0].$message }}</span>
+  </div>
 </template>
 <script lang="ts" setup>
 import { computed, ref, toRefs, useAttrs, watch } from 'vue'
 import {
   Combobox,
+  ComboboxLabel,
   ComboboxInput,
   ComboboxButton,
   ComboboxOptions,
@@ -83,13 +89,19 @@ import {
   TransitionRoot,
 } from '@headlessui/vue'
 import { Icon } from '@/components'
+import type { ErrorObject } from '@vuelidate/core'
 interface IProps {
   label?: string
+  placeholder?: string
   modelValue: any
   items: { text: string; value: any }[]
   hideDetails?: boolean
+  errors?: ErrorObject[]
 }
-const props = defineProps<IProps>()
+const props = withDefaults(defineProps<IProps>(), {
+  errors: () => [],
+  hideDetails: false,
+})
 const { modelValue, items } = toRefs(props)
 const emit = defineEmits(['update:modelValue', 'keypressEnter'])
 const attrs = useAttrs()

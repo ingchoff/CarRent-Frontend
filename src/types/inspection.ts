@@ -1,9 +1,9 @@
 export type TInspection = {
-  id: number
-  inspectionDate: string
-  mileage: number
-  note: string
-  type: string
-  name: string
-  amount: number
+  ID: number
+  InspectionDate: string
+  Mileage: number
+  Name: string
+  Type: string
+  Description: string
+  Amount: number
 }
