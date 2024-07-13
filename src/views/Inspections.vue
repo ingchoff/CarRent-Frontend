@@ -16,8 +16,10 @@
       </Button>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-4">
-      <div class="flex-row gap-4 p-4 bg-secondary rounded">
-        <div class="flex-row mb-4">
+      <div
+        class="col-span-1 flex flex-col justify-between gap-2 p-4 bg-secondary rounded lg:h-72"
+      >
+        <div class="mb-4">
           <div class="text-white">Services</div>
           <div class="border-t border-gray-200 my-4"></div>
           <ComboBox
@@ -25,21 +27,101 @@
             v-model="state.seletedServices"
             :items="services"
           ></ComboBox>
-          <div class="text-white mt-4">Book</div>
-          <div class="border-t border-gray-200 my-4"></div>
-          <ComboBox
-            placeholder="เลือก books"
-            v-model="state.seletedBooks"
-            :items="books"
-          ></ComboBox>
         </div>
-        <div class="flex justify-center">
-          <Button class="bg-primary text-white px-4 py-2 rounded border-0"
+        <div class="flex justify-end gap-2">
+          <Button
+            class="bg-primary text-white px-4 py-2 rounded border-0"
+            @click="searchBytype"
             >กรอง</Button
+          >
+          <Button
+            class="bg-error text-white px-4 py-2 rounded border-0"
+            @click="resetSelectType"
+            >รีเซ็ต</Button
           >
         </div>
       </div>
-      <div class="col-span-3">
+      <div
+        class="col-span-3 card mb-3 h-24 lg:h-72 content-start overflow-auto"
+      >
+        <div
+          v-if="isSelectdType"
+          class="grid grid-rows-3 md:grid-rows-3 grid-cols-3 gap-2 items-center"
+        >
+          <div class="text-4xl col-span-3">
+            {{ state.seletedServices.value }}ล่าสุด
+            <div class="border-t border-gray-200 my-4"></div>
+          </div>
+
+          <div
+            v-for="field in fieldSummary"
+            :key="field.text"
+            class="row-span-2 text-center mb-3"
+          >
+            <div class="text-md font-semibold">{{ field.text }}</div>
+            <div
+              class="text-4xl flex items-center flex-wrap justify-center text-success font-semibold"
+            >
+              <Icon
+                type="custom"
+                name="loading"
+                class="mx-2"
+                v-if="loading.getCreditReport"
+              ></Icon>
+              <span v-else class="transition animate-slide-y break-all">{{
+                currencyFormat(field.value) || 0
+              }}</span>
+            </div>
+          </div>
+        </div>
+        <div
+          v-else
+          class="grid grid-rows-3 md:grid-rows-2 grid-cols-1 md:grid-cols-3 items-center"
+        >
+          <div
+            v-for="field in services"
+            :key="field.text"
+            class="text-center m-2"
+          >
+            <div class="text-md font-semibold mb-2">{{ field.value }}</div>
+            <div class="items-center font-semibold">
+              <Icon
+                type="custom"
+                name="loading"
+                class="mx-2"
+                v-if="loading.getCreditReport"
+              ></Icon>
+              <span v-else class="transition animate-slide-y break-all">
+                <div class="card flex justify-between">
+                  <div
+                    v-for="field in fieldSummary"
+                    :key="field.text"
+                    class="text-center mb-3"
+                  >
+                    <div class="text-md font-semibold">{{ field.text }}</div>
+                    <div
+                      class="flex items-center flex-wrap justify-center text-success font-semibold"
+                    >
+                      <Icon
+                        type="custom"
+                        name="loading"
+                        class="mx-2"
+                        v-if="loading.getCreditReport"
+                      ></Icon>
+                      <span
+                        v-else
+                        class="transition animate-slide-y break-all"
+                        >{{ currencyFormat(field.value) || 0 }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-span-1 md:col-span-4">
         <Table>
           <thead class="text-center">
             <tr>
@@ -63,9 +145,11 @@
                   {{ dateTimeFormat(ins.InspectionDate, 'dd/MM/yyyy') }}
                 </td>
                 <td>{{ ins.Name }}</td>
-                <td>{{ ins.Type }}</td>
-                <td class="text-start">{{ ins.Mileage }}</td>
-                <td class="text-start">{{ ins.Amount }}</td>
+                <td>{{ ins.Service }}</td>
+                <td class="text-start">
+                  {{ currencyFormat(ins.Mileage) }}
+                </td>
+                <td class="text-start">{{ currencyFormat(ins.Amount) }}</td>
 
                 <td class="text-wrap">
                   {{ ins.Description }}
@@ -84,57 +168,64 @@ import { ComboBox, Table, Button, Icon } from '@/components'
 import NewDialog from '@/components/inspection/NewDialog.vue'
 import { useInspectionStore } from '@/stores'
 import type { TInspection } from '@/types'
-import { useDateFns, useForm, useLoading } from '@/utils'
+import { useCommon, useDateFns, useForm, useLoading } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, onMounted, ref } from 'vue'
 
+const { currencyFormat } = useCommon()
+const fieldSummary = ref<{ text: string; value: any }[]>([
+  {
+    text: 'วันที่',
+    value: '',
+  },
+  { text: 'ราคา', value: 0 },
+  { text: 'ไมล์', value: 0 },
+])
 const services = ref<{ text: string; value: any }[]>([
   {
     text: 'น้ำมันเครื่อง',
-    value: 'oil',
+    value: 'น้ำมันเครื่อง',
   },
   {
     text: 'น้ำมันเกียร์',
-    value: 'gear_oil',
+    value: 'น้ำมันเกียร์',
   },
   {
     text: 'น้ำมันเบรก',
-    value: 'break_oil',
+    value: 'น้ำมันเบรก',
   },
   {
     text: 'กรองอากาศ',
-    value: 'air_filter',
+    value: 'กรองอากาศ',
   },
   {
     text: 'กรองแอร์',
-    value: 'air_filter2',
+    value: 'กรองแอร์',
   },
   {
     text: 'ปัดน้ำฝน',
-    value: 'rain_wiper',
+    value: 'ปัดน้ำฝน',
   },
   {
     text: 'แบตเตอรี่',
-    value: 'battery',
+    value: 'แบตเตอรี่',
   },
   {
     text: 'หัวเทียน',
-    value: 'spark_plug',
+    value: 'หัวเทียน',
   },
   {
     text: 'ผ้าเบรก',
-    value: 'brake',
+    value: 'ผ้าเบรก',
   },
   {
     text: 'โช๊ค',
-    value: 'shock',
+    value: 'โช๊ค',
   },
   {
     text: 'สายพราน',
-    value: 'belt',
+    value: 'สายพราน',
   },
-])
-const books = ref<{ text: string; value: string }[]>([
   {
     text: 'ประกันชั้น1',
     value: 'ประกันชั้น1',
@@ -149,6 +240,7 @@ const books = ref<{ text: string; value: string }[]>([
   },
 ])
 const isOpen = ref(false)
+const isSelectdType = ref(false)
 
 const headers = [
   { title: 'วันที่' },
@@ -164,34 +256,54 @@ const insStore = useInspectionStore()
 const { dateTimeFormat } = useDateFns()
 const { state, form, $reset, $validate } = useForm(
   {
-    seletedServices: [],
-    seletedBooks: [],
+    seletedServices: { text: '', value: '' },
     make: '',
     model: '',
   },
   computed(() => {
     return {
       seletedServices: { required },
-      seletedBooks: { required },
       make: { required },
       model: { required },
     }
   })
 )
 
+const searchBytype = async () => {
+  if (state.seletedServices.value) {
+    await insStore.searchByType(state.seletedServices.value)
+    isSelectdType.value = true
+  }
+}
+
+const resetSelectType = async () => {
+  if (state.seletedServices.value) {
+    await getListInspections()
+    await getLatestInspections()
+    state.seletedServices = { text: '', value: '' }
+    isSelectdType.value = false
+  }
+}
+
 const openDialog = () => {
   isOpen.value = true
 }
 
-const closeDialog = () => {
+const closeDialog = async () => {
   isOpen.value = false
+  await getListInspections()
 }
 
 const getListInspections = async () => {
   await insStore.getInspections()
 }
 
+const getLatestInspections = async () => {
+  await insStore.getLastest()
+}
+
 onMounted(async () => {
   await getListInspections()
+  await getLatestInspections()
 })
 </script>

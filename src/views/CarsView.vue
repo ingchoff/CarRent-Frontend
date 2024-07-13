@@ -60,7 +60,7 @@
         <div
           v-for="car in cars"
           :key="car.ID.toString()"
-          class="tw-card rounded-md border flex flex-col p-0 lg:flex-row lg:p-3 relative mb-4 z-[5]"
+          class="card tw-card rounded-md border flex flex-col p-0 lg:flex-row lg:p-3 relative mb-4 z-[5]"
         >
           <div class="relative">
             <img

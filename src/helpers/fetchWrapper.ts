@@ -2,14 +2,7 @@ import router from '@/router'
 import { useAuthStore } from '@/stores'
 import { useAlert } from '@/utils'
 
-export const fetchWrapper = {
-  get: request('GET'),
-  post: request('POST'),
-  put: request('PUT'),
-  delete: request('DELETE'),
-}
-
-function request(method: string) {
+const request = (method: string) => {
   return async (url: string, body: any) => {
     const { token, logout } = useAuthStore()
     const requestOptions: any = {
@@ -32,7 +25,7 @@ function request(method: string) {
   }
 }
 
-async function handleResponse(response: Response) {
+const handleResponse = async (response: Response) => {
   const { updateAlert } = useAlert()
   if (!response.ok) {
     const { token, refreshToken, logout } = useAuthStore()
@@ -71,4 +64,11 @@ async function handleResponse(response: Response) {
   //   }
   //   return data
   // })
+}
+
+export const fetchWrapper = {
+  get: request('GET'),
+  post: request('POST'),
+  put: request('PUT'),
+  delete: request('DELETE'),
 }

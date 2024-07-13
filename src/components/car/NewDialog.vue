@@ -20,25 +20,41 @@
           </div>
           <div class="col-span-3">
             <Select
+              v-if="!isNewMake"
               :items="[
                 { text: '---โปรดเลือก---', value: '' },
                 ...props.carMakes,
+                { text: '---ยี่ห้ออื่น---', value: 'new' },
               ]"
               label="ชื่อยี่ห้อ"
               v-model="state.make"
               :errors="form.make.$errors"
             ></Select>
+            <TextField
+              v-else
+              label="ชื่อยี่ห้อ"
+              v-model="state.make"
+              :errors="form.make.$errors"
+            ></TextField>
           </div>
           <div class="col-span-3">
             <Select
+              v-if="!isNewModel"
               :items="[
                 { text: '---โปรดเลือก---', value: '' },
                 ...props.carModels,
+                { text: '---รุ่นอื่น---', value: 'new' },
               ]"
               label="ชื่อรุ่น"
               v-model="state.model"
               :errors="form.model.$errors"
             ></Select>
+            <TextField
+              v-else
+              label="ชื่อรุ่น"
+              v-model="state.model"
+              :errors="form.model.$errors"
+            ></TextField>
           </div>
           <div class="col-span-3">
             <TextField
@@ -205,6 +221,8 @@ const { state, form, $reset, $validate } = useForm(
 )
 
 const isNewColor = ref(false)
+const isNewMake = ref(false)
+const isNewModel = ref(false)
 const fileImg = ref()
 const carColors = ref<{ text: string; value: string }[]>([
   { text: 'Red', value: 'red' },
@@ -311,15 +329,13 @@ const save = async (isEdit: boolean) => {
 
 const close = async () => {
   isNewColor.value = false
+  isNewMake.value = false
+  isNewModel.value = false
   await $reset()
   emit('onClose', props.isEdit)
 }
 
-const getImgUrl = async (
-  file: any,
-  isUpdated: boolean,
-  isChangeImg: boolean
-) => {
+const getImgUrl = async (file: any, isUpdated: boolean) => {
   if (!isUpdated) {
     state.image = file.name
     fileImg.value = file
@@ -334,6 +350,26 @@ watch(
     if (newColor === 'new') {
       isNewColor.value = true
       state.color = ''
+    }
+  }
+)
+
+watch(
+  () => state.make,
+  (newMake) => {
+    if (newMake === 'new') {
+      isNewMake.value = true
+      state.make = ''
+    }
+  }
+)
+
+watch(
+  () => state.model,
+  (newModel) => {
+    if (newModel === 'new') {
+      isNewModel.value = true
+      state.model = ''
     }
   }
 )

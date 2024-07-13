@@ -13,7 +13,6 @@
               label="วันที่"
               placeholder="dd/mm/yyyy"
               mode="date"
-              :min="new Date()"
               :errors="form.inspectionDate.$errors"
             ></DatePicker>
           </div>
@@ -119,47 +118,47 @@ const isNewColor = ref(false)
 const services = ref<{ text: string; value: any }[]>([
   {
     text: 'น้ำมันเครื่อง',
-    value: 'oil',
+    value: 'น้ำมันเครื่อง',
   },
   {
     text: 'น้ำมันเกียร์',
-    value: 'gear_oil',
+    value: 'น้ำมันเกียร์',
   },
   {
     text: 'น้ำมันเบรก',
-    value: 'break_oil',
+    value: 'น้ำมันเบรก',
   },
   {
     text: 'กรองอากาศ',
-    value: 'air_filter',
+    value: 'กรองอากาศ',
   },
   {
     text: 'กรองแอร์',
-    value: 'air_filter2',
+    value: 'กรองแอร์',
   },
   {
     text: 'ปัดน้ำฝน',
-    value: 'rain_wiper',
+    value: 'ปัดน้ำฝน',
   },
   {
     text: 'แบตเตอรี่',
-    value: 'battery',
+    value: 'แบตเตอรี่',
   },
   {
     text: 'หัวเทียน',
-    value: 'spark_plug',
+    value: 'หัวเทียน',
   },
   {
     text: 'ผ้าเบรก',
-    value: 'brake',
+    value: 'ผ้าเบรก',
   },
   {
     text: 'โช๊ค',
-    value: 'shock',
+    value: 'โช๊ค',
   },
   {
     text: 'สายพราน',
-    value: 'belt',
+    value: 'สายพราน',
   },
   {
     text: 'ประกันชั้น1',
@@ -182,7 +181,7 @@ const save = async (isEdit: boolean) => {
       InspectionDate: state.inspectionDate,
       Mileage: parseInt(state.mileage),
       Amount: parseFloat(state.amount),
-      Type: state.type.value,
+      Service: state.type.value,
       Description: state.description,
       Name: state.name,
       CarID: parseInt(insStore.cidSeleted),
@@ -201,7 +200,7 @@ const save = async (isEdit: boolean) => {
       InspectionDate: state.inspectionDate,
       Mileage: state.mileage,
       Amount: state.amount,
-      Type: state.type,
+      Service: state.type,
       Description: state.description,
       Name: state.name,
       CarID: props.car?.ID,

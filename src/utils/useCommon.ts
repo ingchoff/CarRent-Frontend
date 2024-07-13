@@ -1,3 +1,5 @@
+import BigNumber from 'bignumber.js'
+BigNumber.config({ EXPONENTIAL_AT: 100 })
 export default function () {
   const downloadFile = (content: string, fileName: string) => {
     if (isEmpty(content)) return
@@ -111,7 +113,51 @@ export default function () {
     }
   }
 
+  const currencyFormat = (
+    amount?: number | string | null,
+    minimumDigits = 2
+  ) => {
+    try {
+      if (!amount) {
+        return '0'
+      }
+
+      if (typeof amount !== 'number') {
+        amount = +amount
+      }
+
+      let tmp_amount = amount.toString().replace(/,/g, '')
+      let temp = new BigNumber(tmp_amount).toString()
+      let t = ','
+      let p = '.'
+      let x = temp.split('.')
+      let x1 = x[0]
+      let x2 = ''
+      if (minimumDigits === null) {
+        if (x.length > 1) {
+          minimumDigits = x[1].length
+        } else {
+          minimumDigits = 0
+        }
+      }
+      if (minimumDigits > 0) {
+        if (x.length > 1) {
+          x[1] = (x[1] + '000').substring(0, minimumDigits)
+          x2 = p + x[1]
+        }
+      }
+      let rgx = /(\d+)(\d{3})/
+      while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + t + '$2')
+      }
+      return x1 + x2
+    } catch (err) {
+      return amount
+    }
+  }
+
   return {
+    currencyFormat,
     downloadFile,
     sleep,
     isEmpty,
