@@ -83,7 +83,7 @@
                 </div>
               </div>
               <div
-                class="space-y-6 bg-white p-4 lg:space-y-4 rounded-md lg:w-1/2"
+                class="card space-y-6 bg-white p-4 lg:space-y-4 rounded-md lg:w-1/2"
               >
                 <div
                   class="grid grid-cols-2 gap-4 md:gap-4 sm:gap-6 grid-cols-2"
@@ -260,6 +260,7 @@ const closeDialog = async (isUpdated: boolean) => {
 
 const openInspection = (car: TCar) => {
   insStore.cidSeleted = car.ID.toString()
+  insStore.lastestInspections.data = {}
   router.push(`/inspections/${car.License}`)
 }
 
@@ -271,11 +272,15 @@ onMounted(async () => {
 watch(
   () => state.make,
   (newMake, prevMake) => {
-    if (newMake !== prevMake) {
+    if (newMake !== prevMake && newMake !== '') {
       carModels.value = []
       masterModelsData.value.Make[newMake].map((model) => {
         carModels.value.push({ text: model, value: model })
       })
+      state.model = ''
+    } else if (newMake === '' && newMake !== prevMake) {
+      carModels.value = []
+      state.model = ''
     }
   }
 )

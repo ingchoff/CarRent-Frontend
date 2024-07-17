@@ -48,6 +48,14 @@
               :errors="form.type.$errors"
             ></ComboBox>
           </div>
+          <div class="col-span-3">
+            <TextField
+              label="ระยะเวลาที่ต้องเปลี่ยน(ปี)"
+              v-model="state.duration"
+              type="number"
+              :errors="form.amount.$errors"
+            ></TextField>
+          </div>
           <div class="col-span-6">
             <TextArea
               label="รายละเอียด"
@@ -101,6 +109,7 @@ const { state, form, $reset, $validate } = useForm(
     type: {} as { text: string; value: string },
     description: '',
     amount: '',
+    duration: '',
   },
   computed(() => {
     return {
@@ -110,6 +119,7 @@ const { state, form, $reset, $validate } = useForm(
       type: { required },
       description: { required },
       amount: { required },
+      duration: { required },
     }
   })
 )
@@ -185,14 +195,15 @@ const save = async (isEdit: boolean) => {
       Description: state.description,
       Name: state.name,
       CarID: parseInt(insStore.cidSeleted),
+      Duration: parseInt(state.duration),
     })
     if (addIns) {
       updateLoading({ save: false })
-      updateAlert({ type: 'success', message: 'เพิ่มรถสำเร็จ!' })
+      updateAlert({ type: 'success', message: 'เพิ่มสำเร็จ!' })
       await close()
     } else {
       updateLoading({ save: false })
-      updateAlert({ type: 'error', message: 'เพิ่มรถไม่สำเร็จ!' })
+      updateAlert({ type: 'error', message: 'เพิ่มไม่สำเร็จ!' })
     }
   } else if ((await $validate()) && isEdit) {
     updateLoading({ save: true })
@@ -207,11 +218,11 @@ const save = async (isEdit: boolean) => {
     })
     if (updateIns) {
       updateLoading({ save: false })
-      updateAlert({ type: 'success', message: 'เพิ่มรถสำเร็จ!' })
+      updateAlert({ type: 'success', message: 'เพิ่มสำเร็จ!' })
       await close()
     } else {
       updateLoading({ save: false })
-      updateAlert({ type: 'error', message: 'เพิ่มรถไม่สำเร็จ!' })
+      updateAlert({ type: 'error', message: 'เพิ่มไม่สำเร็จ!' })
     }
   }
 }

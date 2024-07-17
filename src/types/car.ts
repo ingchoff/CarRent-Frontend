@@ -14,4 +14,5 @@ export type TCar = {
   DailyRate: number
   Available: Boolean
   UserID: number
+  CreatedAt: string
 }
