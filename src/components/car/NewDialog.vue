@@ -201,6 +201,7 @@ const { state, form, $reset, $validate } = useForm(
     license: '',
     engine: '',
     image: '',
+    createdAt: '',
   },
   computed(() => {
     return {
@@ -314,6 +315,7 @@ const save = async (isEdit: boolean) => {
         Engine: state.engine,
         Door: parseInt(state.door),
         License: state.license,
+        CreatedAt: state.createdAt,
       }
     )
     if (updateCar) {
@@ -390,6 +392,7 @@ watch(
       state.license = newCar.License
       state.engine = newCar.Engine
       state.image = newCar.Image
+      state.createdAt = newCar.CreatedAt
     }
   }
 )
