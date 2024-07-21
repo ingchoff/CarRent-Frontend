@@ -107,14 +107,12 @@
           class="grid grid-rows-2 md:grid-rows-2 grid-cols-1 md:grid-cols-3 items-center"
         >
           <div
-            v-if="Object.keys(insStore.lastestInspections.data).length > 0"
+            v-if="insStore.lastestInspections.data"
             v-for="(value, key) in insStore.lastestInspections.data"
             :key="key"
             class="text-center m-2"
           >
-            <div
-              class="grid grid-cols-6 items-center text-md font-semibold mb-2"
-            >
+            <div class="grid grid-cols-6 items-center font-semibold mb-2">
               <div class="col-start-3 col-span-2">{{ key }}</div>
               <Button
                 class="col-start-6 col-span-1 p-0 cursor-auto"
@@ -186,15 +184,19 @@
               <td colspan="100%" class="text-center">ไม่พบรายการ</td>
             </tr>
             <template v-else>
-              <tr v-for="ins in insStore.inspections" :key="ins.ID">
+              <tr
+                v-for="ins in insStore.inspections"
+                :key="ins.ID"
+                class="hover:bg-gray-100"
+              >
                 <td class="text-start">
                   {{ dateTimeFormat(ins.InspectionDate, 'dd/MM/yyyy') }}
                 </td>
-                <td>{{ ins.Name }}</td>
                 <td>{{ ins.Service }}</td>
                 <td class="text-start">
                   {{ currencyFormat(ins.Mileage) }}
                 </td>
+                <td>{{ ins.Name }}</td>
                 <td class="text-start">{{ currencyFormat(ins.Amount) }}</td>
 
                 <td class="text-wrap">
@@ -283,11 +285,11 @@ const selectedService = ref('')
 
 const headers = [
   { title: 'วันที่' },
-  { title: 'ชื่อรายการ', class: 'text-center' },
   { title: 'ประเภท', class: 'text-center' },
   { title: 'ไมล์' },
+  { title: 'ชื่อรายการ', class: 'text-center' },
   { title: 'ราคา' },
-  { title: 'รายละเอียด', class: 'text-center' },
+  { title: 'รายละเอียด/ร้าน', class: 'text-center' },
 ]
 
 const { loading } = useLoading()
@@ -296,14 +298,10 @@ const { dateTimeFormat } = useDateFns()
 const { state, form, $reset, $validate } = useForm(
   {
     seletedServices: { text: '', value: '' },
-    make: '',
-    model: '',
   },
   computed(() => {
     return {
       seletedServices: { required },
-      make: { required },
-      model: { required },
     }
   })
 )

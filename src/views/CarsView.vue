@@ -37,22 +37,29 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-4">
       <div class="lg:flex-row gap-2 p-4 bg-secondary rounded lg:h-72">
         <Select
-          :items="[{ text: '---Select---', value: '' }, ...carNames]"
+          :items="[{ text: '---ทั้งหมด---', value: '' }, ...carNames]"
           label="ชื่อยี่ห้อ"
           v-model="state.make"
           :labelColor="'white'"
           :errors="form.make.$errors"
         ></Select>
         <Select
-          :items="[{ text: '---Select---', value: '' }, ...carModels]"
+          :items="[{ text: '---ทั้งหมด---', value: '' }, ...carModels]"
           label="ชื่อรุ่น"
           v-model="state.model"
           :labelColor="'white'"
           :errors="form.model.$errors"
         ></Select>
-        <div class="flex justify-center">
-          <Button class="bg-primary text-white px-4 py-2 rounded border-0"
+        <div class="flex justify-center gap-4">
+          <Button
+            class="bg-primary text-white px-4 py-2 rounded border-0"
+            @click="search"
             >กรอง</Button
+          >
+          <Button
+            class="bg-error text-white px-4 py-2 rounded border-0"
+            @click="resetSearch"
+            >รีเซ็ต</Button
           >
         </div>
       </div>
@@ -183,15 +190,13 @@ const insStore = useInspectionStore()
 const router = useRouter()
 const { state, form, $reset, $validate } = useForm(
   {
-    startDate: '',
     make: '',
     model: '',
   },
   computed(() => {
     return {
-      startDate: { required },
-      make: { required },
-      model: { required },
+      make: {},
+      model: {},
     }
   })
 )
@@ -262,6 +267,23 @@ const openInspection = (car: TCar) => {
   insStore.cidSeleted = car.ID.toString()
   insStore.lastestInspections.data = {}
   router.push(`/inspections/${car.License}`)
+}
+
+const search = async () => {
+  if (state.make && state.model) {
+    await carsStore.searchCar('model', state.model)
+    cars.value = carsStore.cars
+  } else {
+    await carsStore.searchCar('make', state.make)
+    cars.value = carsStore.cars
+  }
+}
+
+const resetSearch = async () => {
+  if (state.make || state.model) {
+    await $reset()
+    await getListCars()
+  }
 }
 
 onMounted(async () => {

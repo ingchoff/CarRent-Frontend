@@ -21,5 +21,14 @@ export const useCarStore = defineStore('cars', {
         this.car = data.data
       }
     },
+    async searchCar(condition: string, value: string) {
+      const data = await fetchWrapper.get(
+        `${API_STOCK}/cars/search?${condition}=${value}`,
+        ''
+      )
+      if (data) {
+        this.cars = data.data
+      }
+    },
   },
 })
