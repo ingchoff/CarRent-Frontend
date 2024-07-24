@@ -264,9 +264,11 @@ const closeDialog = async (isUpdated: boolean) => {
 }
 
 const openInspection = (car: TCar) => {
-  insStore.cidSeleted = car.ID.toString()
+  insStore.persistCidToLocalStorage(car.ID)
   insStore.lastestInspections.data = {}
-  router.push(`/inspections/${car.License}`)
+  router.push({
+    path: `/inspections/${car.License}`,
+  })
 }
 
 const search = async () => {

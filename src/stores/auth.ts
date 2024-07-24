@@ -8,7 +8,9 @@ export const useAuthStore = defineStore({
   id: 'auth',
   state: () => ({
     token: null as any,
-    user: {} as TUser,
+    user: localStorage.getItem('user')
+      ? (JSON.parse(localStorage.getItem('user') || '') as TUser)
+      : {},
     refreshTokenTimeout: null,
   }),
   actions: {
@@ -22,6 +24,7 @@ export const useAuthStore = defineStore({
         this.token = JSON.parse(localStorage.getItem('token') as string)
         const userData = await fetchWrapper.get(`${API_STOCK}/user/token`, '')
         this.user = userData.user
+        this.persistToLocalStorage()
       }
     },
     async logout() {
@@ -36,7 +39,8 @@ export const useAuthStore = defineStore({
         }),
       }
       fetch(`${API_AUTH_TEST}/revorktoken`, requestPosts)
-      localStorage.removeItem('token')
+      this.clearPersistLocalStorage()
+      this.user = {}
       this.token = null
     },
     async refreshToken() {
@@ -50,8 +54,15 @@ export const useAuthStore = defineStore({
         router.go(0)
       } else {
         // refreshToken > 4h must be re-login
+        this.clearPersistLocalStorage()
         router.push('/login')
       }
+    },
+    persistToLocalStorage() {
+      localStorage.setItem('user', JSON.stringify(this.user))
+    },
+    clearPersistLocalStorage() {
+      localStorage.clear()
     },
   },
 })

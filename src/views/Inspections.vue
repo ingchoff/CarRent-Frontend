@@ -6,7 +6,18 @@
       :isEdit="false"
       @onClose="closeDialog"
     />
-    <div class="flex justify-end mb-2">
+    <div class="flex mb-2">
+      <Icon
+        type="custom"
+        name="loading"
+        class="mx-2"
+        v-if="loading.getInspection"
+      ></Icon>
+      <div v-else class="flex-1 text-4xl">
+        {{
+          `${carsStore.car?.Make} ${carsStore.car?.Model} (${carsStore.car?.Year}) ${carsStore.car?.SubModel}  - ${carsStore.car?.License}`
+        }}
+      </div>
       <Button
         class="bg-success px-4 py-2 rounded"
         :icon="'PlusCircleIcon'"
@@ -17,7 +28,7 @@
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-4">
       <div
-        class="col-span-1 flex flex-col justify-between gap-2 p-4 bg-secondary rounded lg:h-72"
+        class="col-span-1 flex flex-col justify-between gap-2 p-4 bg-secondary rounded lg:h-80"
       >
         <div class="mb-4">
           <div class="text-white">Services</div>
@@ -42,7 +53,7 @@
         </div>
       </div>
       <div
-        class="col-span-3 card mb-3 h-24 lg:h-72 content-start overflow-auto"
+        class="col-span-3 card mb-3 h-24 lg:h-80 content-start overflow-auto"
       >
         <div
           v-if="isSelectdType"
@@ -89,7 +100,7 @@
                 type="custom"
                 name="loading"
                 class="mx-2"
-                v-if="loading.getCreditReport"
+                v-if="loading.getInspection"
               ></Icon>
               <span
                 v-else-if="key === 'InspectionDate'"
@@ -125,7 +136,7 @@
                 type="custom"
                 name="loading"
                 class="mx-2"
-                v-if="loading.getCreditReport"
+                v-if="loading.getInspections"
               ></Icon>
               <span v-else class="transition animate-slide-y break-all">
                 <div class="card flex justify-between">
@@ -144,7 +155,7 @@
                         type="custom"
                         name="loading"
                         class="mx-2"
-                        v-if="loading.getCreditReport"
+                        v-if="loading.getInspections"
                       ></Icon>
                       <span
                         v-else-if="k === 'InspectionDate'"
@@ -214,11 +225,14 @@
 <script setup lang="ts">
 import { ComboBox, Table, Button, Icon } from '@/components'
 import NewDialog from '@/components/inspection/NewDialog.vue'
-import { useInspectionStore } from '@/stores'
-import type { TInspection, TLastest } from '@/types'
+import { API_STOCK } from '@/config'
+import { fetchWrapper } from '@/helpers/fetchWrapper'
+import { useCarStore, useInspectionStore } from '@/stores'
+import type { TCar, TInspection, TLastest } from '@/types'
 import { useCommon, useDateFns, useForm, useLoading } from '@/utils'
 import { required } from '@/utils/useValidators'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const { currencyFormat } = useCommon()
 const services = ref<{ text: string; value: any }[]>([
@@ -282,6 +296,7 @@ const services = ref<{ text: string; value: any }[]>([
 const isOpen = ref(false)
 const isSelectdType = ref(false)
 const selectedService = ref('')
+const car = ref<TCar>()
 
 const headers = [
   { title: 'วันที่' },
@@ -292,7 +307,9 @@ const headers = [
   { title: 'รายละเอียด/ร้าน', class: 'text-center' },
 ]
 
-const { loading } = useLoading()
+const route = useRoute()
+const carsStore = useCarStore()
+const { loading, updateLoading } = useLoading()
 const insStore = useInspectionStore()
 const { dateTimeFormat } = useDateFns()
 const { state, form, $reset, $validate } = useForm(
@@ -370,8 +387,19 @@ const getLatestInspections = async () => {
   }
 }
 
+const getCarInfo = async () => {
+  await carsStore.getCar(insStore.cidSeleted || '')
+}
+
 onMounted(async () => {
+  updateLoading({ getInspections: true })
+  await getCarInfo()
   await getListInspections()
   await getLatestInspections()
+  updateLoading({ getInspections: false })
+})
+
+onUnmounted(() => {
+  insStore.clearCidSeleted()
 })
 </script>

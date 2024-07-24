@@ -8,7 +8,7 @@ export const useInspectionStore = defineStore('inspections', {
     inspections: [] as TInspection[],
     inspection: {} as TInspection,
     lastestInspections: {} as TResultInspectionSummary,
-    cidSeleted: '',
+    cidSeleted: localStorage.getItem('cidSeleted'),
   }),
   actions: {
     async getInspections() {
@@ -37,6 +37,14 @@ export const useInspectionStore = defineStore('inspections', {
       if (data) {
         this.lastestInspections = data
       }
+    },
+    persistCidToLocalStorage(cid: number) {
+      this.cidSeleted = cid.toString()
+      localStorage.setItem('cidSeleted', this.cidSeleted)
+    },
+    clearCidSeleted() {
+      this.cidSeleted = ''
+      localStorage.removeItem('cidSeleted')
     },
   },
 })

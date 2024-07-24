@@ -6,7 +6,9 @@ import type { TCar } from '@/types'
 export const useCarStore = defineStore('cars', {
   state: () => ({
     cars: [] as TCar[],
-    car: {} as TCar,
+    car: localStorage.getItem('car')
+      ? (JSON.parse(localStorage.getItem('car') || '') as TCar)
+      : ({} as TCar),
   }),
   actions: {
     async getCars() {
@@ -15,10 +17,11 @@ export const useCarStore = defineStore('cars', {
         this.cars = data.data
       }
     },
-    async getCar(id: number) {
+    async getCar(id: string) {
       const data = await fetchWrapper.get(`${API_STOCK}/cars/${id}`, '')
       if (data) {
         this.car = data.data
+        this.persistToLocalStorage()
       }
     },
     async searchCar(condition: string, value: string) {
@@ -29,6 +32,9 @@ export const useCarStore = defineStore('cars', {
       if (data) {
         this.cars = data.data
       }
+    },
+    persistToLocalStorage() {
+      localStorage.setItem('car', JSON.stringify(this.car))
     },
   },
 })
