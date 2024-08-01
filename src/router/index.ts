@@ -5,6 +5,8 @@ import InspectionsView from '../views/Inspections.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import { useAuthStore } from '@/stores'
+import { fetchWrapper } from '@/helpers/fetchWrapper'
+import { API_STOCK } from '@/config'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,6 +58,11 @@ router.beforeEach(async (to: any) => {
     }
   } else if (authRequired && localStorage.getItem('token')) {
     authStore.token = JSON.parse(localStorage.getItem('token') as string)
+    const userData = await fetchWrapper.get(`${API_STOCK}/user/token`, '')
+    if (userData) {
+      authStore.user = userData.user
+      authStore.persistToLocalStorage()
+    }
   }
 })
 

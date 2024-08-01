@@ -10,9 +10,9 @@ export type TInspection = {
 
 export type TLastest = {
   InspectionDate: string
-  Amount: number
   Mileage: number
-  Duration: number
+  PercentDuration: number
+  PercentMileage: number
 }
 
 export type TInspectionSummary = {

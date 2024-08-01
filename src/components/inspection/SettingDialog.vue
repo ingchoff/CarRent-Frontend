@@ -4,67 +4,7 @@
       {{ title }}
     </div>
     <div class="dialog-text">
-      <div>
-        <div class="grid grid-cols-6 gap-2">
-          <div class="col-span-3">
-            <DatePicker
-              id="inspection-date"
-              v-model="form.inspectionDate"
-              label="วันที่"
-              placeholder="dd/mm/yyyy"
-              mode="date"
-              :errors="form.inspectionDate.$errors"
-            ></DatePicker>
-          </div>
-          <div class="col-span-3">
-            <TextField
-              label="ชื่อรายการ"
-              v-model="state.name"
-              :errors="form.name.$errors"
-            ></TextField>
-          </div>
-          <div class="col-span-3">
-            <TextField
-              label="ไมล์"
-              v-model="state.mileage"
-              type="number"
-              :errors="form.mileage.$errors"
-            ></TextField>
-          </div>
-          <div class="col-span-3">
-            <TextField
-              label="ราคา"
-              v-model="state.amount"
-              type="number"
-              :errors="form.amount.$errors"
-            ></TextField>
-          </div>
-          <div class="col-span-3 text-center">
-            <ComboBox
-              label="ประเภท"
-              placeholder="เลือกประเภท"
-              v-model="state.type"
-              :items="services"
-              :errors="form.type.$errors"
-            ></ComboBox>
-          </div>
-          <!-- <div class="col-span-3">
-            <TextField
-              label="ระยะเวลาที่ต้องเปลี่ยน(ปี)"
-              v-model="state.duration"
-              type="number"
-              :errors="form.amount.$errors"
-            ></TextField>
-          </div> -->
-          <div class="col-span-6">
-            <TextArea
-              label="รายละเอียด"
-              v-model="state.description"
-              :errors="form.description.$errors"
-            ></TextArea>
-          </div>
-        </div>
-      </div>
+      <div></div>
     </div>
     <div class="dialog-actions flex justify-end gap-3">
       <Button @click="close">ยกเลิก</Button>

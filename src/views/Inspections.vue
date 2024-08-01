@@ -6,6 +6,12 @@
       :isEdit="false"
       @onClose="closeDialog"
     />
+    <SettingDialog
+      title="ตั้งค่า"
+      :isOpen="isOpenSetting"
+      :isEdit="false"
+      @onClose="closeSetting"
+    />
     <div class="flex mb-2">
       <Icon
         type="custom"
@@ -18,6 +24,12 @@
           `${carsStore.car?.Make} ${carsStore.car?.Model} (${carsStore.car?.Year}) ${carsStore.car?.SubModel}  - ${carsStore.car?.License}`
         }}
       </div>
+      <Button
+        class="bg-warning px-4 py-2 rounded"
+        :icon="'CogIcon'"
+        @click="openSetting"
+      >
+      </Button>
       <Button
         class="bg-success px-4 py-2 rounded"
         :icon="'PlusCircleIcon'"
@@ -57,28 +69,29 @@
       >
         <div
           v-if="isSelectdType"
-          class="grid grid-rows-3 md:grid-rows-3 grid-cols-3 gap-2 items-center"
+          class="grid grid-rows-3 md:grid-rows-3 grid-cols-4 gap-2 items-center"
         >
           <div
             v-if="insStore.lastestInspections.data[selectedService]"
-            class="grid grid-cols-6 text-4xl col-span-3"
+            class="grid grid-cols-6 text-4xl col-span-4"
           >
             <div class="col-span-2 col-start-3">
               {{ selectedService }}ล่าสุด
             </div>
-            <Button
+            <!-- <Button
               class="col-start-6 col-span-1 p-0 cursor-auto text-xl"
               :class="classObject"
               >เสื่อม
               {{
-                insStore.lastestInspections.data[selectedService].Duration
+                insStore.lastestInspections.data[selectedService]
+                  .PercentDuration
               }}%</Button
-            >
+            > -->
             <div class="col-span-6 border-t border-gray-200 my-4"></div>
           </div>
           <div
             v-if="insStore.inspections.length === 0"
-            class="text-2xl row-span-3 col-span-3"
+            class="text-2xl row-span-3 col-span-4"
           >
             ไม่มีข้อมูล
           </div>
@@ -91,7 +104,17 @@
             class="row-span-2 text-center mb-3"
           >
             <div class="text-md font-semibold">
-              {{ key }}
+              {{
+                key === 'InspectionDate'
+                  ? 'วันที่เปลี่ยน'
+                  : key === 'Mileage'
+                  ? 'ไมล์'
+                  : key === 'PercentDuration'
+                  ? 'เสื่อม(ระยะเวลา)'
+                  : key === 'PercentMileage'
+                  ? 'เสื่อม(ไมล์)'
+                  : key
+              }}
             </div>
             <div
               class="text-4xl flex items-center flex-wrap justify-center text-success font-semibold"
@@ -105,7 +128,21 @@
               <span
                 v-else-if="key === 'InspectionDate'"
                 class="transition animate-slide-y break-all"
-                >{{ dateTimeFormat(value, 'dd/MM/yyyy') || 0 }}</span
+                >{{ dateTimeFormat(value, 'dd/MM/yyyy') }}</span
+              >
+              <Button
+                v-else-if="key === 'PercentDuration'"
+                class="col-start-6 col-span-1 p-0 cursor-auto text-xl text-black transition animate-slide-y"
+                :class="classButtonsDuration(value as number)"
+              >
+                {{ value }}%</Button
+              >
+              <Button
+                v-else-if="key === 'PercentMileage'"
+                class="col-start-6 col-span-1 p-0 cursor-auto text-xl text-black transition animate-slide-y"
+                :class="classButtonsMileage(value as number)"
+              >
+                {{ value }}%</Button
               >
               <span v-else class="transition animate-slide-y break-all">{{
                 currencyFormat(value) || 0
@@ -117,19 +154,23 @@
           v-else
           class="grid grid-rows-2 md:grid-rows-2 grid-cols-1 md:grid-cols-3 items-center"
         >
+          <div v-if="loading.getLastest" class="justify-self-center col-span-3">
+            <Icon type="custom" name="loading" class="mx-auto"></Icon>
+          </div>
           <div
-            v-if="insStore.lastestInspections.data"
+            v-else-if="notFound"
+            class="justify-self-center col-span-3 text-2xl"
+          >
+            ไม่พบรายการ
+          </div>
+          <div
+            v-else
             v-for="(value, key) in insStore.lastestInspections.data"
             :key="key"
             class="text-center m-2"
           >
             <div class="grid grid-cols-6 items-center font-semibold mb-2">
               <div class="col-start-3 col-span-2">{{ key }}</div>
-              <Button
-                class="col-start-6 col-span-1 p-0 cursor-auto"
-                :class="classButtonsDuration(value.Duration)"
-                >{{ value.Duration }}%</Button
-              >
             </div>
             <div class="items-center">
               <Icon
@@ -141,16 +182,22 @@
               <span v-else class="transition animate-slide-y break-all">
                 <div class="card flex justify-between">
                   <div
-                    v-for="(v, k, i) in value"
+                    v-for="(v, k, i) in filteredLatestField(value)"
                     :key="i"
-                    class="text-center mb-3"
+                    class="text-center"
                   >
-                    <div v-if="k !== 'Duration'" class="text-md font-semibold">
-                      {{ k === 'InspectionDate' ? 'Date' : k }}
+                    <div class="text-md font-semibold">
+                      {{
+                        k === 'InspectionDate'
+                          ? 'Date'
+                          : k === 'PercentDuration'
+                          ? 'Duration'
+                          : k === 'PercentMileage'
+                          ? 'Mileage'
+                          : k
+                      }}
                     </div>
-                    <div
-                      class="flex items-center flex-wrap justify-start text-success"
-                    >
+                    <div class="items-center justify-center text-success">
                       <Icon
                         type="custom"
                         name="loading"
@@ -158,14 +205,21 @@
                         v-if="loading.getInspections"
                       ></Icon>
                       <span
-                        v-else-if="k === 'InspectionDate'"
+                        v-if="k === 'InspectionDate'"
                         class="transition animate-slide-y break-all"
                         >{{ dateTimeFormat(v, 'dd/MM/yyyy') || 0 }}</span
                       >
-                      <span
-                        v-else-if="k === 'Amount' || k === 'Mileage'"
-                        class="transition animate-slide-y break-all"
-                        >{{ currencyFormat(v) || 0 }}</span
+                      <Button
+                        v-else-if="k === 'PercentDuration'"
+                        class="cursor-auto text-black"
+                        :class="classButtonsDuration(v as number)"
+                        >{{ v }}%</Button
+                      >
+                      <Button
+                        v-else-if="k === 'PercentMileage'"
+                        class="cursor-auto text-black"
+                        :class="classButtonsMileage(v as number)"
+                        >{{ v }}%</Button
                       >
                     </div>
                   </div>
@@ -173,7 +227,6 @@
               </span>
             </div>
           </div>
-          <div v-else class="col-start-2 text-xl">ไม่พบข้อมูล</div>
         </div>
       </div>
       <div class="col-span-1 md:col-span-4">
@@ -225,10 +278,9 @@
 <script setup lang="ts">
 import { ComboBox, Table, Button, Icon } from '@/components'
 import NewDialog from '@/components/inspection/NewDialog.vue'
-import { API_STOCK } from '@/config'
-import { fetchWrapper } from '@/helpers/fetchWrapper'
+import SettingDialog from '@/components/inspection/SettingDialog.vue'
 import { useCarStore, useInspectionStore } from '@/stores'
-import type { TCar, TInspection, TLastest } from '@/types'
+import type { TInspectionSummary, TLastest } from '@/types'
 import { useCommon, useDateFns, useForm, useLoading } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -294,9 +346,10 @@ const services = ref<{ text: string; value: any }[]>([
   },
 ])
 const isOpen = ref(false)
+const isOpenSetting = ref(false)
 const isSelectdType = ref(false)
 const selectedService = ref('')
-const car = ref<TCar>()
+const notFound = ref(false)
 
 const headers = [
   { title: 'วันที่' },
@@ -307,7 +360,6 @@ const headers = [
   { title: 'รายละเอียด/ร้าน', class: 'text-center' },
 ]
 
-const route = useRoute()
 const carsStore = useCarStore()
 const { loading, updateLoading } = useLoading()
 const insStore = useInspectionStore()
@@ -324,25 +376,28 @@ const { state, form, $reset, $validate } = useForm(
 )
 
 const filteredInspectionField = (obj: TLastest) => {
-  const { Duration, ...filtered } = obj
+  const { ...filtered } = obj
   return filtered
 }
 
-const classObject = computed(() => {
-  const duration =
-    insStore.lastestInspections.data[selectedService.value].Duration
-  return {
-    'bg-success': duration <= 70,
-    'bg-error': duration > 90,
-    'bg-warning': duration > 70 && duration <= 90,
-  }
-})
+const filteredLatestField = (obj: TLastest) => {
+  const { Mileage, ...filtered } = obj
+  return filtered
+}
 
 const classButtonsDuration = (duration: number) => {
   return {
     'bg-success': duration <= 70,
     'bg-error': duration > 90,
     'bg-warning': duration > 70 && duration <= 90,
+  }
+}
+
+const classButtonsMileage = (mileage: number) => {
+  return {
+    'bg-success': mileage <= 70,
+    'bg-error': mileage > 90,
+    'bg-warning': mileage > 70 && mileage <= 90,
   }
 }
 
@@ -377,13 +432,28 @@ const closeDialog = async () => {
   await getLatestInspections()
 }
 
+const openSetting = () => {
+  isOpenSetting.value = true
+}
+
+const closeSetting = () => {
+  isOpenSetting.value = false
+}
+
 const getListInspections = async () => {
+  updateLoading({ getInspections: true })
   await insStore.getInspections()
+  updateLoading({ getInspections: false })
 }
 
 const getLatestInspections = async () => {
   if (insStore.inspections.length > 0) {
+    notFound.value = false
+    updateLoading({ getLastest: true })
     await insStore.getLastest()
+    updateLoading({ getLastest: false })
+  } else {
+    notFound.value = true
   }
 }
 
@@ -392,14 +462,13 @@ const getCarInfo = async () => {
 }
 
 onMounted(async () => {
-  updateLoading({ getInspections: true })
   await getCarInfo()
   await getListInspections()
   await getLatestInspections()
-  updateLoading({ getInspections: false })
 })
 
 onUnmounted(() => {
   insStore.clearCidSeleted()
+  insStore.lastestInspections = { data: {} }
 })
 </script>

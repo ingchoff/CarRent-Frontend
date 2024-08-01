@@ -7,7 +7,7 @@ export const useInspectionStore = defineStore('inspections', {
   state: () => ({
     inspections: [] as TInspection[],
     inspection: {} as TInspection,
-    lastestInspections: {} as TResultInspectionSummary,
+    lastestInspections: { data: {} } as TResultInspectionSummary,
     cidSeleted: localStorage.getItem('cidSeleted'),
   }),
   actions: {
