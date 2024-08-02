@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto py-4 lg:py-10 text-center">
+  <div class="container mx-auto py-4 lg:py-10">
     <NewDialog
       title="เพิ่มรายการ"
       :isOpen="isOpen"
@@ -10,33 +10,36 @@
       title="ตั้งค่า"
       :isOpen="isOpenSetting"
       :isEdit="false"
+      :services="services"
       @onClose="closeSetting"
     />
-    <div class="flex mb-2">
+    <div class="grid grid-cols-12 mb-2">
       <Icon
         type="custom"
         name="loading"
         class="mx-2"
         v-if="loading.getInspection"
       ></Icon>
-      <div v-else class="flex-1 text-4xl">
+      <div v-else class="col-start-4 col-span-6 text-4xl">
         {{
           `${carsStore.car?.Make} ${carsStore.car?.Model} (${carsStore.car?.Year}) ${carsStore.car?.SubModel}  - ${carsStore.car?.License}`
         }}
       </div>
-      <Button
-        class="bg-warning px-4 py-2 rounded"
-        :icon="'CogIcon'"
-        @click="openSetting"
-      >
-      </Button>
-      <Button
-        class="bg-success px-4 py-2 rounded"
-        :icon="'PlusCircleIcon'"
-        @click="openDialog"
-      >
-        เพิ่ม
-      </Button>
+      <div class="grid grid-cols-2 col-start-11 col-span-2 gap-2">
+        <Button
+          class="bg-warning px-4 py-2 rounded justify-self-end"
+          :icon="'CogIcon'"
+          @click="openSetting"
+        >
+        </Button>
+        <Button
+          class="bg-success px-4 py-2 rounded"
+          :icon="'PlusCircleIcon'"
+          @click="openDialog"
+        >
+          เพิ่ม
+        </Button>
+      </div>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-4">
       <div
@@ -48,7 +51,7 @@
           <ComboBox
             placeholder="เลือก services"
             v-model="state.seletedServices"
-            :items="services"
+            :items="servicesSelect"
           ></ComboBox>
         </div>
         <div class="flex justify-end gap-2">
@@ -279,72 +282,17 @@
 import { ComboBox, Table, Button, Icon } from '@/components'
 import NewDialog from '@/components/inspection/NewDialog.vue'
 import SettingDialog from '@/components/inspection/SettingDialog.vue'
+import { API_STOCK } from '@/config'
+import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { useCarStore, useInspectionStore } from '@/stores'
-import type { TInspectionSummary, TLastest } from '@/types'
+import type { TLastest, TService } from '@/types'
 import { useCommon, useDateFns, useForm, useLoading } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
 
 const { currencyFormat } = useCommon()
-const services = ref<{ text: string; value: any }[]>([
-  {
-    text: 'น้ำมันเครื่อง',
-    value: 'น้ำมันเครื่อง',
-  },
-  {
-    text: 'น้ำมันเกียร์',
-    value: 'น้ำมันเกียร์',
-  },
-  {
-    text: 'น้ำมันเบรก',
-    value: 'น้ำมันเบรก',
-  },
-  {
-    text: 'กรองอากาศ',
-    value: 'กรองอากาศ',
-  },
-  {
-    text: 'กรองแอร์',
-    value: 'กรองแอร์',
-  },
-  {
-    text: 'ปัดน้ำฝน',
-    value: 'ปัดน้ำฝน',
-  },
-  {
-    text: 'แบตเตอรี่',
-    value: 'แบตเตอรี่',
-  },
-  {
-    text: 'หัวเทียน',
-    value: 'หัวเทียน',
-  },
-  {
-    text: 'ผ้าเบรก',
-    value: 'ผ้าเบรก',
-  },
-  {
-    text: 'โช๊ค',
-    value: 'โช๊ค',
-  },
-  {
-    text: 'สายพราน',
-    value: 'สายพราน',
-  },
-  {
-    text: 'ประกันชั้น1',
-    value: 'ประกันชั้น1',
-  },
-  {
-    text: 'พรบ',
-    value: 'พรบ',
-  },
-  {
-    text: 'ต่อภาษี',
-    value: 'ต่อภาษี',
-  },
-])
+const servicesSelect = ref<{ text: string; value: any }[]>([])
+const services = ref<TService[]>([])
 const isOpen = ref(false)
 const isOpenSetting = ref(false)
 const isSelectdType = ref(false)
@@ -436,8 +384,10 @@ const openSetting = () => {
   isOpenSetting.value = true
 }
 
-const closeSetting = () => {
+const closeSetting = async () => {
   isOpenSetting.value = false
+  await getLatestInspections()
+  await getServices()
 }
 
 const getListInspections = async () => {
@@ -461,10 +411,22 @@ const getCarInfo = async () => {
   await carsStore.getCar(insStore.cidSeleted || '')
 }
 
+const getServices = async () => {
+  const servicesResponse: { [key: string]: TService[] } =
+    await fetchWrapper.get(`${API_STOCK}/services/${insStore.cidSeleted}`, '')
+  if (servicesResponse) {
+    services.value = servicesResponse.data
+    servicesResponse.data.map((service) => {
+      servicesSelect.value.push({ text: service.Name, value: service.Name })
+    })
+  }
+}
+
 onMounted(async () => {
   await getCarInfo()
   await getListInspections()
   await getLatestInspections()
+  await getServices()
 })
 
 onUnmounted(() => {

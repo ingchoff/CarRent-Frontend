@@ -275,7 +275,7 @@ const search = async () => {
   if (state.make && state.model) {
     await carsStore.searchCar('model', state.model)
     cars.value = carsStore.cars
-  } else {
+  } else if (state.make !== '') {
     await carsStore.searchCar('make', state.make)
     cars.value = carsStore.cars
   }
