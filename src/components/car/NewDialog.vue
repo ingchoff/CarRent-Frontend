@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model="props.isOpen" :width="480">
+  <Dialog v-model="props.isOpen" :width="640">
     <div class="dialog-title divide-y">
       {{ title }}
     </div>
@@ -11,14 +11,21 @@
           @selectImage="getImgUrl"
         ></ImagePicker>
         <div class="grid grid-cols-6 gap-2 mt-4">
-          <div class="col-span-3">
+          <div class="col-span-2">
+            <TextField
+              label="ชื่อเล่นรถ"
+              v-model="state.name"
+              :errors="form.name.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-2">
             <TextField
               label="เลขทะเบียน"
               v-model="state.license"
               :errors="form.license.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <Select
               v-if="!isNewMake"
               :items="[
@@ -37,12 +44,12 @@
               :errors="form.make.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <Select
               v-if="!isNewModel"
               :items="[
                 { text: '---โปรดเลือก---', value: '' },
-                ...props.carModels,
+                ...carModels,
                 { text: '---รุ่นอื่น---', value: 'new' },
               ]"
               label="ชื่อรุ่น"
@@ -56,7 +63,7 @@
               :errors="form.model.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <TextField
               label="รุ่นย่อย"
               v-model="state.subModel"
@@ -64,7 +71,7 @@
               :errors="form.subModel.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <TextField
               label="ปี"
               v-model="state.year"
@@ -74,7 +81,7 @@
               :errors="form.year.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <TextField
               label="ขนาดเครื่อง"
               v-model="state.engine"
@@ -83,7 +90,7 @@
               :errors="form.engine.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <Select
               v-if="!isNewColor"
               :items="[
@@ -102,7 +109,22 @@
               :errors="form.color.$errors"
             ></TextField>
           </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
+            <TextField
+              label="ประตู"
+              v-model="state.door"
+              type="Number"
+              :errors="form.door.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-2">
+            <TextField
+              label="เชื้อเพลง"
+              v-model="state.fuel"
+              :errors="form.fuel.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-2">
             <Radio
               id="gear"
               v-model="state.gear"
@@ -114,28 +136,32 @@
               :errors="form.gear.$errors"
             ></Radio>
           </div>
-          <div class="col-span-3">
-            <TextField
-              label="ประตู"
-              v-model="state.door"
-              type="Number"
-              :errors="form.door.$errors"
-            ></TextField>
-          </div>
-          <div class="col-span-3">
-            <TextField
-              label="เชื้อเพลง"
-              v-model="state.fuel"
-              :errors="form.fuel.$errors"
-            ></TextField>
-          </div>
-          <div class="col-span-3">
+          <div class="col-span-2">
             <TextField
               label="ค่าเช่า/วัน"
               v-model="state.dailyRate"
               type="Number"
               :errors="form.dailyRate.$errors"
             ></TextField>
+          </div>
+          <div class="col-span-2">
+            <TextField
+              label="ไมล์เริ่มต้น"
+              v-model="state.latestMileage"
+              type="Number"
+              :errors="form.latestMileage.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-2">
+            <DatePicker
+              id="inspection-date"
+              v-model="form.latestDate"
+              label="วันที่รับรถ"
+              placeholder="dd/mm/yyyy"
+              mode="date"
+              :max="Date.now()"
+              :errors="form.latestDate.$errors"
+            ></DatePicker>
           </div>
         </div>
       </div>
@@ -153,7 +179,14 @@
 </template>
 
 <script setup lang="ts">
-import { Button, Dialog, TextField, Select, Radio } from '@/components'
+import {
+  Button,
+  Dialog,
+  TextField,
+  Select,
+  Radio,
+  DatePicker,
+} from '@/components'
 import { API_STOCK } from '@/config'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { useCarStore } from '@/stores'
@@ -177,7 +210,7 @@ interface IProps {
   isOpen: boolean
   car?: TCar
   carMakes?: { text: string; value: string }[]
-  carModels?: { text: string; value: string }[]
+  masterModel: { Make: { [key: string]: string[] } }
 }
 const props = defineProps<IProps>()
 const emit = defineEmits(['onClose'])
@@ -189,6 +222,8 @@ const { updateAlert } = useAlert()
 const carsStore = useCarStore()
 const { state, form, $reset, $validate } = useForm(
   {
+    latestDate: '',
+    name: '',
     make: '',
     model: '',
     subModel: '',
@@ -199,12 +234,15 @@ const { state, form, $reset, $validate } = useForm(
     door: '',
     fuel: '',
     license: '',
+    latestMileage: 0,
     engine: '',
     image: '',
     createdAt: '',
   },
   computed(() => {
     return {
+      latestDate: { required },
+      name: { required },
       make: { required },
       model: { required },
       subModel: { required },
@@ -215,6 +253,7 @@ const { state, form, $reset, $validate } = useForm(
       door: { required },
       fuel: { required },
       license: { required },
+      latestMileage: {},
       engine: { required },
       image: { required },
     }
@@ -232,6 +271,7 @@ const carColors = ref<{ text: string; value: string }[]>([
   { text: 'Black', value: 'black' },
   { text: 'White', value: 'white' },
 ])
+const carModels = ref<{ text: string; value: string }[]>([])
 
 const uploadImage = async () => {
   const metadata = {
@@ -287,6 +327,9 @@ const save = async (isEdit: boolean) => {
       Engine: state.engine,
       Door: parseInt(state.door),
       License: state.license,
+      CarName: state.name,
+      LatestMileage: state.latestMileage,
+      LatestInspectionDate: state.latestDate,
     })
     if (addCar) {
       updateLoading({ save: false })
@@ -393,6 +436,21 @@ watch(
       state.engine = newCar.Engine
       state.image = newCar.Image
       state.createdAt = newCar.CreatedAt
+    }
+  }
+)
+watch(
+  () => state.make,
+  (newMake, prevMake) => {
+    if (newMake !== prevMake && newMake !== '' && !isNewMake.value) {
+      carModels.value = []
+      props.masterModel.Make[newMake].map((model) => {
+        carModels.value?.push({ text: model, value: model })
+      })
+      state.model = ''
+    } else if (newMake === '' && newMake !== prevMake) {
+      carModels.value = []
+      state.model = ''
     }
   }
 )

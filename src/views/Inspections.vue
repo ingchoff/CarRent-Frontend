@@ -4,6 +4,7 @@
       title="เพิ่มรายการ"
       :isOpen="isOpen"
       :isEdit="false"
+      :services="services"
       @onClose="closeDialog"
     />
     <SettingDialog
@@ -20,7 +21,7 @@
         class="mx-2"
         v-if="loading.getInspection"
       ></Icon>
-      <div v-else class="col-start-4 col-span-6 text-4xl">
+      <div v-else class="col-start-3 col-span-6 text-4xl">
         {{
           `${carsStore.car?.Make} ${carsStore.car?.Model} (${carsStore.car?.Year}) ${carsStore.car?.SubModel}  - ${carsStore.car?.License}`
         }}
@@ -41,11 +42,11 @@
         </Button>
       </div>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-4 lg:gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-12 lg:gap-4">
       <div
-        class="col-span-1 flex flex-col justify-between gap-2 p-4 bg-secondary rounded lg:h-80"
+        class="col-span-2 flex flex-col justify-between gap-2 p-4 bg-secondary rounded lg:h-80"
       >
-        <div class="mb-4">
+        <div class="mb-4 text-center">
           <div class="text-white">Services</div>
           <div class="border-t border-gray-200 my-4"></div>
           <ComboBox
@@ -54,7 +55,7 @@
             :items="servicesSelect"
           ></ComboBox>
         </div>
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-center gap-2">
           <Button
             class="bg-primary text-white px-4 py-2 rounded border-0"
             @click="searchBytype"
@@ -68,7 +69,7 @@
         </div>
       </div>
       <div
-        class="col-span-3 card mb-3 h-24 lg:h-80 content-start overflow-auto"
+        class="col-span-10 card mb-3 h-24 lg:h-80 content-start overflow-auto"
       >
         <div
           v-if="isSelectdType"
@@ -81,15 +82,6 @@
             <div class="col-span-2 col-start-3">
               {{ selectedService }}ล่าสุด
             </div>
-            <!-- <Button
-              class="col-start-6 col-span-1 p-0 cursor-auto text-xl"
-              :class="classObject"
-              >เสื่อม
-              {{
-                insStore.lastestInspections.data[selectedService]
-                  .PercentDuration
-              }}%</Button
-            > -->
             <div class="col-span-6 border-t border-gray-200 my-4"></div>
           </div>
           <div
@@ -119,9 +111,7 @@
                   : key
               }}
             </div>
-            <div
-              class="text-4xl flex items-center flex-wrap justify-center text-success font-semibold"
-            >
+            <div class="text-4xl flex justify-center">
               <Icon
                 type="custom"
                 name="loading"
@@ -135,17 +125,17 @@
               >
               <Button
                 v-else-if="key === 'PercentDuration'"
-                class="col-start-6 col-span-1 p-0 cursor-auto text-xl text-black transition animate-slide-y"
+                class="cursor-auto text-xl text-black transition animate-slide-y"
                 :class="classButtonsDuration(value as number)"
               >
-                {{ value }}%</Button
+                {{ Math.round(value as number) }}%</Button
               >
               <Button
                 v-else-if="key === 'PercentMileage'"
-                class="col-start-6 col-span-1 p-0 cursor-auto text-xl text-black transition animate-slide-y"
+                class="cursor-auto text-xl text-black transition animate-slide-y"
                 :class="classButtonsMileage(value as number)"
               >
-                {{ value }}%</Button
+                {{ Math.round(value as number) }}%</Button
               >
               <span v-else class="transition animate-slide-y break-all">{{
                 currencyFormat(value) || 0
@@ -155,7 +145,7 @@
         </div>
         <div
           v-else
-          class="grid grid-rows-2 md:grid-rows-2 grid-cols-1 md:grid-cols-3 items-center"
+          class="grid grid-rows-2 md:grid-rows-2 grid-cols-1 md:grid-cols-3 items-center gap-2"
         >
           <div v-if="loading.getLastest" class="justify-self-center col-span-3">
             <Icon type="custom" name="loading" class="mx-auto"></Icon>
@@ -170,10 +160,15 @@
             v-else
             v-for="(value, key) in insStore.lastestInspections.data"
             :key="key"
-            class="text-center m-2"
+            class="text-start"
           >
             <div class="grid grid-cols-6 items-center font-semibold mb-2">
-              <div class="col-start-3 col-span-2">{{ key }}</div>
+              <div
+                class="col-start-1 col-span-2 p-0 border-none bg-white hover:bg-white cursor-pointer"
+                @click="clickSelectService(key as string)"
+              >
+                {{ key }}
+              </div>
             </div>
             <div class="items-center">
               <Icon
@@ -183,24 +178,28 @@
                 v-if="loading.getInspections"
               ></Icon>
               <span v-else class="transition animate-slide-y break-all">
-                <div class="card flex justify-between">
+                <div
+                  class="card flex gap-2 justify-center items-center px-0 py-2"
+                >
                   <div
                     v-for="(v, k, i) in filteredLatestField(value)"
                     :key="i"
-                    class="text-center"
+                    class="text-start"
                   >
                     <div class="text-md font-semibold">
                       {{
                         k === 'InspectionDate'
                           ? 'Date'
                           : k === 'PercentDuration'
-                          ? 'Duration'
+                          ? ''
                           : k === 'PercentMileage'
-                          ? 'Mileage'
+                          ? ''
                           : k
                       }}
                     </div>
-                    <div class="items-center justify-center text-success">
+                    <div
+                      class="items-center justify-center text-center text-success"
+                    >
                       <Icon
                         type="custom"
                         name="loading"
@@ -216,13 +215,18 @@
                         v-else-if="k === 'PercentDuration'"
                         class="cursor-auto text-black"
                         :class="classButtonsDuration(v as number)"
-                        >{{ v }}%</Button
+                        >{{ Math.round(v as number) }}%</Button
+                      >
+                      <span
+                        v-if="k === 'Mileage'"
+                        class="transition animate-slide-y break-all"
+                        >{{ currencyFormat(v) }}</span
                       >
                       <Button
                         v-else-if="k === 'PercentMileage'"
                         class="cursor-auto text-black"
                         :class="classButtonsMileage(v as number)"
-                        >{{ v }}%</Button
+                        >{{ Math.round(v as number) }}%</Button
                       >
                     </div>
                   </div>
@@ -232,7 +236,7 @@
           </div>
         </div>
       </div>
-      <div class="col-span-1 md:col-span-4">
+      <div class="col-span-1 md:col-span-12">
         <Table>
           <thead class="text-center">
             <tr>
@@ -259,11 +263,11 @@
                 <td class="text-start">
                   {{ dateTimeFormat(ins.InspectionDate, 'dd/MM/yyyy') }}
                 </td>
-                <td>{{ ins.Service }}</td>
+                <td class="text-center">{{ ins.Service }}</td>
                 <td class="text-start">
                   {{ currencyFormat(ins.Mileage) }}
                 </td>
-                <td>{{ ins.Name }}</td>
+                <td class="text-center">{{ ins.Name }}</td>
                 <td class="text-start">{{ currencyFormat(ins.Amount) }}</td>
 
                 <td class="text-wrap">
@@ -329,7 +333,7 @@ const filteredInspectionField = (obj: TLastest) => {
 }
 
 const filteredLatestField = (obj: TLastest) => {
-  const { Mileage, ...filtered } = obj
+  const { ...filtered } = obj
   return filtered
 }
 
@@ -420,6 +424,15 @@ const getServices = async () => {
       servicesSelect.value.push({ text: service.Name, value: service.Name })
     })
   }
+}
+
+const clickSelectService = async (service: string) => {
+  updateLoading({ getInspections: true })
+  state.seletedServices = { text: service, value: service }
+  isSelectdType.value = true
+  selectedService.value = service
+  await insStore.searchByType(state.seletedServices.value)
+  updateLoading({ getInspections: false })
 }
 
 onMounted(async () => {

@@ -83,7 +83,7 @@ import { Button, Dialog, TextField, ComboBox, DatePicker } from '@/components'
 import { API_STOCK } from '@/config'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { useCarStore, useInspectionStore } from '@/stores'
-import type { TCar } from '@/types'
+import type { TCar, TService } from '@/types'
 import { useForm, useLoading, useAlert } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, ref, watch } from 'vue'
@@ -94,6 +94,7 @@ interface IProps {
   isEdit: boolean
   isOpen: boolean
   car?: TCar
+  services: TService[]
 }
 const props = defineProps<IProps>()
 const emit = defineEmits(['onClose'])
@@ -109,7 +110,6 @@ const { state, form, $reset, $validate } = useForm(
     type: {} as { text: string; value: string },
     description: '',
     amount: '',
-    // duration: '',
   },
   computed(() => {
     return {
@@ -125,64 +125,7 @@ const { state, form, $reset, $validate } = useForm(
 )
 
 const isNewColor = ref(false)
-const services = ref<{ text: string; value: any }[]>([
-  {
-    text: 'น้ำมันเครื่อง',
-    value: 'น้ำมันเครื่อง',
-  },
-  {
-    text: 'น้ำมันเกียร์',
-    value: 'น้ำมันเกียร์',
-  },
-  {
-    text: 'น้ำมันเบรก',
-    value: 'น้ำมันเบรก',
-  },
-  {
-    text: 'กรองอากาศ',
-    value: 'กรองอากาศ',
-  },
-  {
-    text: 'กรองแอร์',
-    value: 'กรองแอร์',
-  },
-  {
-    text: 'ปัดน้ำฝน',
-    value: 'ปัดน้ำฝน',
-  },
-  {
-    text: 'แบตเตอรี่',
-    value: 'แบตเตอรี่',
-  },
-  {
-    text: 'หัวเทียน',
-    value: 'หัวเทียน',
-  },
-  {
-    text: 'ผ้าเบรก',
-    value: 'ผ้าเบรก',
-  },
-  {
-    text: 'โช๊ค',
-    value: 'โช๊ค',
-  },
-  {
-    text: 'สายพราน',
-    value: 'สายพราน',
-  },
-  {
-    text: 'ประกันชั้น1',
-    value: 'ประกันชั้น1',
-  },
-  {
-    text: 'พรบ',
-    value: 'พรบ',
-  },
-  {
-    text: 'ต่อภาษี',
-    value: 'ต่อภาษี',
-  },
-])
+const services = ref<{ text: string; value: any }[]>([])
 
 const save = async (isEdit: boolean) => {
   if ((await $validate()) && !isEdit) {
@@ -195,7 +138,6 @@ const save = async (isEdit: boolean) => {
       Description: state.description,
       Name: state.name,
       CarID: parseInt(insStore.cidSeleted || ''),
-      // Duration: parseInt(state.duration),
     })
     if (addIns) {
       updateLoading({ save: false })
@@ -233,32 +175,13 @@ const close = async () => {
   emit('onClose', props.isEdit)
 }
 
-// watch(
-//   () => state.color,
-//   (newColor) => {
-//     if (newColor === 'new') {
-//       isNewColor.value = true
-//       state.color = ''
-//     }
-//   }
-// )
-
 watch(
-  () => props.car,
-  (newCar) => {
-    if (newCar) {
-      // state.model = newCar.Model
-      // state.make = newCar.Make
-      // state.year = newCar.Year.toString()
-      // state.color = newCar.Color
-      // state.gear = newCar.Gear
-      // state.dailyRate = newCar.DailyRate.toString()
-      // state.subModel = newCar.SubModel
-      // state.fuel = newCar.Fuel
-      // state.door = newCar.Door.toString()
-      // state.license = newCar.License
-      // state.engine = newCar.Engine
-      // state.image = newCar.Image
+  () => props.services,
+  (newServices) => {
+    if (newServices) {
+      newServices.map((s) => {
+        services.value.push({ text: s.Name, value: s.Name })
+      })
     }
   }
 )

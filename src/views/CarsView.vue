@@ -5,7 +5,7 @@
       :isOpen="isOpen"
       :isEdit="false"
       :carMakes="carNames"
-      :carModels="carModels"
+      :masterModel="masterModelsData"
       @onClose="closeDialog"
     />
     <NewDialog
@@ -14,7 +14,7 @@
       :isEdit="true"
       :car="carInfo"
       :carMakes="carNames"
-      :carModels="carModels"
+      :masterModel="masterModelsData"
       @onClose="closeDialog"
     />
     <div class="flex justify-center">
