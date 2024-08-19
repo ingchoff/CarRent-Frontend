@@ -1,5 +1,9 @@
 <template>
-  <label v-if="label" class="text-left font-medium">
+  <label
+    v-if="label"
+    class="text-left font-medium"
+    :class="{ 'text-white': textWhite }"
+  >
     {{ label }}
   </label>
   <v-date-picker
@@ -89,6 +93,7 @@ interface IProps {
   mode?: 'date' | 'dateTime' | 'time'
   hideDetails?: boolean
   errors?: ErrorObject[]
+  textWhite?: boolean
 }
 const props = withDefaults(defineProps<IProps>(), {
   id: 'date-picker',
@@ -106,6 +111,7 @@ const {
   hideDetails,
   label,
   placeholder,
+  textWhite,
 } = toRefs(props)
 const emit = defineEmits(['update:modelValue', 'keypressEnter'])
 const attrs = useAttrs()

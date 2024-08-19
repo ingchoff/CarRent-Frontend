@@ -10,7 +10,7 @@ export const useAuthStore = defineStore({
     token: null as any,
     user: localStorage.getItem('user')
       ? (JSON.parse(localStorage.getItem('user') || '') as TUser)
-      : {},
+      : ({} as any),
     refreshTokenTimeout: null,
   }),
   actions: {

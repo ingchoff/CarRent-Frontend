@@ -36,5 +36,9 @@ export const useCarStore = defineStore('cars', {
     persistToLocalStorage() {
       localStorage.setItem('car', JSON.stringify(this.car))
     },
+    clearCarLocalStorage() {
+      this.car = {} as TCar
+      localStorage.removeItem('car')
+    },
   },
 })

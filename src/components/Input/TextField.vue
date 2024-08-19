@@ -1,6 +1,6 @@
 <template>
   <div class="relative" :class="{ 'flex self-center': isSelfCenter }">
-    <label v-if="label" class="text-left font-medium">
+    <label v-if="label" class="text-left font-medium" :class="$attrs.class">
       {{ label }}
     </label>
     <div class="relative flex-grow">
@@ -20,12 +20,14 @@
       <input
         :value="modelValue"
         class="flex-grow"
-        :class="{
-          error: errors.length,
-          'pl-8': prependIcon,
-          'pr-8': appendIcon,
-        }"
-        v-bind="attrs"
+        :class="[
+          filteredClasses,
+          {
+            error: errors.length,
+            'pl-8': prependIcon,
+            'pr-8': appendIcon,
+          },
+        ]"
         :type="type"
         aria-autocomplete="none"
         autocomplete="off"
@@ -87,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs, useAttrs, type Ref } from 'vue'
+import { computed, ref, toRefs, useAttrs, type Ref } from 'vue'
 import Icon from '@/components/common/Icon.vue'
 import { useCommon } from '@/utils'
 interface ErrorObject {
@@ -157,4 +159,9 @@ const keypressAction = (event: {
   which: number
   preventDefault: () => void
 }) => {}
+const filteredClasses = computed(() => {
+  const classList =
+    typeof attrs.class === 'string' ? attrs.class.split(' ') : []
+  return classList.filter((cls: string) => cls !== 'text-white').join(' ')
+})
 </script>

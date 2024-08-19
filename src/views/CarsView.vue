@@ -154,6 +154,12 @@
             >
               <Button
                 class="bg-primary text-white px-4 py-2 rounded"
+                @click="openRental(car)"
+              >
+                การเช่า
+              </Button>
+              <Button
+                class="bg-primary text-white px-4 py-2 rounded"
                 @click="openInspection(car)"
               >
                 ตรวจสอบรถ
@@ -179,7 +185,7 @@ import type { TCar } from '@/types'
 import { Button, Select, Icon } from '@/components'
 import { required } from '@/utils/useValidators'
 import { useForm } from '@/utils'
-import { useCarStore, useInspectionStore } from '@/stores'
+import { useCarStore, useInspectionStore, useRentalStore } from '@/stores'
 import NewDialog from '@/components/car/NewDialog.vue'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
 import { API_STOCK } from '@/config'
@@ -187,6 +193,7 @@ import { useRouter } from 'vue-router'
 
 const carsStore = useCarStore()
 const insStore = useInspectionStore()
+const rentalStore = useRentalStore()
 const router = useRouter()
 const { state, form, $reset, $validate } = useForm(
   {
@@ -268,6 +275,13 @@ const openInspection = (car: TCar) => {
   insStore.lastestInspections.data = {}
   router.push({
     path: `/inspections/${car.License}`,
+  })
+}
+
+const openRental = (car: TCar) => {
+  rentalStore.persistCidToLocalStorage(car.ID)
+  router.push({
+    path: `/rentals/${car.License}`,
   })
 }
 
