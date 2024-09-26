@@ -19,6 +19,21 @@ export const useRentalStore = defineStore('rentals', {
         this.rentals = data.data
       }
     },
+    async searchRental(condition: {
+      cid: string
+      start: string
+      end: string
+      name: string
+      nid: string
+    }) {
+      const data = await fetchWrapper.get(
+        `${API_STOCK}/rental/search?cid=${condition.cid}&name=${condition.name}&start=${condition.start}&end=${condition.end}`,
+        ''
+      )
+      if (data) {
+        this.rentals = data.data
+      }
+    },
     persistCidToLocalStorage(cid: number) {
       this.cidSeleted = cid.toString()
       localStorage.setItem('cidSeleted', this.cidSeleted)

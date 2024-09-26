@@ -104,7 +104,7 @@ const { updateAlert } = useAlert()
 const insStore = useInspectionStore()
 const { state, form, $reset, $validate } = useForm(
   {
-    inspectionDate: '',
+    inspectionDate: new Date(),
     mileage: '',
     name: '',
     type: {} as { text: string; value: string },
@@ -117,9 +117,8 @@ const { state, form, $reset, $validate } = useForm(
       mileage: { required },
       name: { required },
       type: { required },
-      description: { required },
+      description: {},
       amount: { required },
-      // duration: { required },
     }
   })
 )

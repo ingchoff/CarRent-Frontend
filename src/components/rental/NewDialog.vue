@@ -7,6 +7,29 @@
       <div>
         <div class="grid grid-cols-12 gap-2">
           <div class="col-span-5">
+            <TextField
+              v-model="state.name"
+              label="ชื่อ-นามสกุลผู้เช่า"
+              :errors="form.name.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-4">
+            <TextField
+              v-model="state.nid"
+              label="เลขบัตรปชช"
+              type="number"
+              :errors="form.nid.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-3">
+            <TextField
+              v-model="state.phone"
+              label="เบอร์โทรผู้เช่า"
+              type="tel"
+              :errors="form.phone.$errors"
+            ></TextField>
+          </div>
+          <div class="col-span-5">
             <DatePicker
               id="start-date"
               v-model="form.rentalDate"
@@ -81,11 +104,11 @@
           </div>
           <div class="col-span-2">
             <TextField
-              class="text-error disabled"
-              v-model="calExpense"
-              label="ค่าใช้จ่ายทั้งหมด"
+              class="text-error"
+              v-model="state.expense"
+              label="ค่าใช้จ่ายเพิ่มเติม"
               :type="'number'"
-              disabled
+              :errors="form.expense.$errors"
             ></TextField>
           </div>
           <div class="col-span-2">
@@ -94,7 +117,6 @@
               v-model="calNet"
               label="รายได้สุทธิ"
               :type="'number'"
-              disabled
             ></TextField>
           </div>
           <div class="col-span-6">
@@ -110,6 +132,18 @@
               label="โน๊ตลูกค้า"
               :errors="form.customerNote.$errors"
             ></TextArea>
+          </div>
+          <div class="col-span-2">
+            <Radio
+              id="status"
+              v-model="state.status"
+              label="สถานะ"
+              :items="[
+                { text: 'Done', value: 'done' },
+                { text: 'Pending', value: 'pending' },
+              ]"
+              :errors="form.status.$errors"
+            ></Radio>
           </div>
         </div>
       </div>
@@ -127,11 +161,11 @@
 </template>
 
 <script setup lang="ts">
-import { Button, Dialog, TextField, ComboBox, DatePicker } from '@/components'
+import { Button, Dialog, TextField, DatePicker, Radio } from '@/components'
 import { API_STOCK } from '@/config'
 import { fetchWrapper } from '@/helpers/fetchWrapper'
-import { useAuthStore, useCarStore, useInspectionStore } from '@/stores'
-import type { TCar, TRental, TService } from '@/types'
+import { useAuthStore } from '@/stores'
+import type { TCar, TRental } from '@/types'
 import { useForm, useLoading, useAlert } from '@/utils'
 import { required } from '@/utils/useValidators'
 import { computed, ref, watch } from 'vue'
@@ -142,16 +176,16 @@ interface IProps {
   isEdit: boolean
   isOpen: boolean
   car: TCar
+  rentalData: TRental
 }
 const props = defineProps<IProps>()
 const emit = defineEmits(['onClose'])
-
 const { loading, updateLoading } = useLoading()
 const { updateAlert } = useAlert()
 const authStore = useAuthStore()
 const { state, form, $reset, $validate } = useForm(
   {
-    rentalDate: {} as { start: ''; end: '' },
+    rentalDate: { start: new Date(), end: new Date() },
     startMile: 0,
     endMile: 0,
     customerNote: '',
@@ -162,7 +196,10 @@ const { state, form, $reset, $validate } = useForm(
     dailyRate: props.car?.DailyRate,
     carDelivery1: 0,
     carDelivery2: 0,
-    status: false,
+    status: '',
+    name: '',
+    nid: '',
+    phone: '',
   },
   computed(() => {
     return {
@@ -178,6 +215,9 @@ const { state, form, $reset, $validate } = useForm(
       carDelivery1: { required },
       carDelivery2: { required },
       status: { required },
+      name: {},
+      nid: {},
+      phone: {},
     }
   })
 )
@@ -186,8 +226,7 @@ const daysCount = ref(0)
 const numDays = computed(() => {
   if (state.rentalDate) {
     const timeDiff =
-      new Date(state.rentalDate.end).getTime() -
-      new Date(state.rentalDate.start).getTime()
+      state.rentalDate.end.getTime() - state.rentalDate.start.getTime()
     daysCount.value = Math.round(timeDiff / (1000 * 60 * 60 * 24))
     return Math.round(timeDiff / (1000 * 60 * 60 * 24)) || 0
   }
@@ -195,14 +234,11 @@ const numDays = computed(() => {
 const numMiles = computed(() => {
   return state.endMile - state.startMile
 })
-const calExpense = computed(() => {
-  state.expense =
-    parseInt(state.carDelivery1 as unknown as string) +
-    parseInt(state.carDelivery2 as unknown as string)
-  return state.expense
-})
 const calAmount = computed(() => {
-  state.totalAmount = state.dailyRate * daysCount.value || 0
+  state.totalAmount =
+    state.dailyRate * daysCount.value +
+      (parseInt(state.carDelivery1 as unknown as string) +
+        parseInt(state.carDelivery2 as unknown as string)) || 0
   return state.totalAmount
 })
 const calNet = computed(() => {
@@ -221,14 +257,17 @@ const save = async (isEdit: boolean) => {
       Detail: state.detail,
       CarDelivery1: parseInt(state.carDelivery1 as unknown as string),
       CarDelivery2: parseInt(state.carDelivery2 as unknown as string),
-      Status: 'undone',
+      Status: state.status,
       StartDate: state.rentalDate.start,
       StartMile: parseInt(state.startMile as unknown as string),
       EndDate: state.rentalDate.end,
       EndMile: parseInt(state.endMile as unknown as string),
-      Expense: state.expense,
+      Expense: parseInt(state.expense as unknown as string),
       TotalNet: state.totalNet,
       TotalAmount: state.totalAmount,
+      Name: state.name,
+      Nid: state.nid,
+      Phone: state.phone,
     } as TRental)
     updateLoading({ save: false })
     if (newRental) {
@@ -236,6 +275,39 @@ const save = async (isEdit: boolean) => {
       await close()
     } else {
       updateAlert({ message: 'เพิ่มรายการไม่สำเร็จ', type: 'error' })
+    }
+  } else if ((await $validate()) && isEdit) {
+    updateLoading({ save: true })
+    const updatedRental = await fetchWrapper.put(
+      `${API_STOCK}/rental/${props.rentalData.ID}`,
+      {
+        CarID: props.car.ID,
+        DailyRate: parseInt(state.dailyRate as unknown as string),
+        CustomerNote: state.customerNote,
+        UserID: authStore.user.ID,
+        Detail: state.detail,
+        CarDelivery1: parseInt(state.carDelivery1 as unknown as string),
+        CarDelivery2: parseInt(state.carDelivery2 as unknown as string),
+        Status: state.status,
+        StartDate: state.rentalDate.start,
+        StartMile: parseInt(state.startMile as unknown as string),
+        EndDate: state.rentalDate.end,
+        EndMile: parseInt(state.endMile as unknown as string),
+        Expense: parseInt(state.expense as unknown as string),
+        TotalNet: state.totalNet,
+        TotalAmount: state.totalAmount,
+        Name: state.name,
+        Nid: state.nid,
+        Phone: state.phone,
+        CreatedAt: props.rentalData.CreatedAt,
+      } as TRental
+    )
+    updateLoading({ save: false })
+    if (updatedRental) {
+      updateAlert({ message: 'แก้ไขรายการสำเร็จ', type: 'success' })
+      await close()
+    } else {
+      updateAlert({ message: 'แก้ไขรายการไม่สำเร็จ', type: 'error' })
     }
   }
 }
@@ -249,6 +321,40 @@ watch(
   () => props.car.DailyRate,
   (newDailyRate) => {
     state.dailyRate = newDailyRate
+  }
+)
+
+watch(
+  () => props.isOpen,
+  (isOpenState) => {
+    if (isOpenState && !props.isEdit) {
+      state.startMile = props.car.LatestMileage
+    }
+  }
+)
+
+watch(
+  () => props.isEdit,
+  (stateEdit) => {
+    if (stateEdit) {
+      state.startMile = props.rentalData.StartMile
+      state.endMile = props.rentalData.EndMile
+      state.rentalDate = {
+        start: props.rentalData.StartDate,
+        end: props.rentalData.EndDate,
+      }
+      state.customerNote = props.rentalData.CustomerNote
+      state.detail = props.rentalData.Detail
+      state.carDelivery1 = props.rentalData.CarDelivery1
+      state.carDelivery2 = props.rentalData.CarDelivery2
+      state.expense = props.rentalData.Expense
+      state.status = props.rentalData.Status
+      state.totalAmount = props.rentalData.TotalAmount
+      state.totalNet = props.rentalData.TotalNet
+      state.name = props.rentalData.Name
+      state.nid = props.rentalData.Nid
+      state.phone = props.rentalData.Phone
+    }
   }
 )
 </script>

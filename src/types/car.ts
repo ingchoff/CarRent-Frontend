@@ -13,6 +13,8 @@ export type TCar = {
   Color: string
   DailyRate: number
   Available: Boolean
+  LatestMileage: number
+  LatestInspectionDate: string
   UserID: number
   CreatedAt: string
 }

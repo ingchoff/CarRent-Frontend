@@ -1,8 +1,8 @@
 <template>
-  <label v-if="label" class="text-left font-medium">
+  <label v-if="label" class="text-left font-medium" :class="$attrs.class">
     {{ label }}
   </label>
-  <div class="my-2 space-y-1">
+  <div class="flex my-2 gap-4">
     <div v-for="(item, index) in items" :key="index" class="flex items-center">
       <input
         :id="`${id}-${index}`"
@@ -10,14 +10,14 @@
         :value="item.value"
         type="radio"
         :name="id"
-        @input="
-          emit('update:modelValue', ($event.target as HTMLInputElement).value)
-        "
+        :checked="item.value === modelValue"
+        @input="onInput($event)"
         class="focus:ring-transparent h-4 w-4 text-primary checked:border-secondary border-gray-200"
       />
       <label
         :for="`${id}-${index}`"
         class="ml-3 block text-sm font-medium text-gray-700"
+        :class="$attrs.class"
         v-html="item.text"
       />
     </div>
@@ -28,9 +28,16 @@
 </template>
 
 <script setup lang="ts">
-/* __placeholder__ */
+import {
+  defineProps,
+  defineEmits,
+  toRefs,
+  withDefaults,
+  useAttrs,
+  watch,
+} from 'vue'
 import type { ErrorObject } from '@vuelidate/core'
-import { toRefs, useAttrs, watch } from 'vue'
+
 interface IProps {
   label?: string
   modelValue: any
@@ -39,13 +46,20 @@ interface IProps {
   hideDetails?: boolean
   id?: string
 }
+
 const props = withDefaults(defineProps<IProps>(), {
   errors: () => [],
   items: () => [],
 })
+
 const { modelValue, items, id, label } = toRefs(props)
 const emit = defineEmits(['update:modelValue'])
 const attrs = useAttrs()
+
+const onInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  emit('update:modelValue', target.value)
+}
 
 watch(modelValue, (newV) => {
   if (!newV) {

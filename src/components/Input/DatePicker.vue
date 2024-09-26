@@ -14,9 +14,8 @@
     :is-range="isRange"
     :min-date="min"
     :max-date="max"
-    :update-on-input="false"
   >
-    <template v-slot="{ inputValue, togglePopover }">
+    <template v-slot="{ inputValue, togglePopover, inputEvents }">
       <div v-if="isRange" class="flex justify-center items-center">
         <div class="relative flex-grow">
           <Icon
@@ -29,10 +28,10 @@
             :placeholder="placeholder"
             :id="`${id}-start`"
             :value="inputValue.start"
+            v-on="inputEvents.start"
             class="flex-grow pl-8"
             :class="{ error: errors.length }"
             v-bind="attrs"
-            @click="togglePopover()"
           />
         </div>
         <Icon name="ArrowRightIcon" class="w-6 h-6 mx-2" />
@@ -47,10 +46,10 @@
             :placeholder="placeholder"
             :id="`${id}-end`"
             :value="inputValue.end"
+            v-on="inputEvents.end"
             :class="{ error: errors.length }"
             class="flex-grow pl-8"
             v-bind="attrs"
-            @click="togglePopover()"
           />
         </div>
       </div>
@@ -65,10 +64,10 @@
           :placeholder="placeholder"
           :id="id"
           :value="inputValue"
+          v-on="inputEvents"
           :class="{ error: errors.length }"
           class="flex-grow pl-8"
           v-bind="attrs"
-          @click="togglePopover()"
         />
       </div>
     </template>

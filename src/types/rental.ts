@@ -1,7 +1,10 @@
 export type TRental = {
   ID: number
-  StartDate: string
-  EndDate: string
+  Name: string
+  Nid: string
+  Phone: string
+  StartDate: Date
+  EndDate: Date
   StartMile: number
   EndMile: number
   CustomerNote: string
@@ -15,4 +18,5 @@ export type TRental = {
   Status: string
   UserID: number
   CarID: number
+  CreatedAt?: string
 }

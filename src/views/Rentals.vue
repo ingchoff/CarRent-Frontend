@@ -3,10 +3,20 @@
     <NewDialog
       title="เพิ่มการจอง"
       :isOpen="isOpen"
-      :isEdit="false"
+      :isEdit="isEdit"
+      :rentalData="rental"
       :car="carsStore.car"
       @onClose="closeDialog"
     />
+    <Dialog v-model="isOpenInfo" :width="640">
+      <div class="dialog-title divide-y">
+        {{ moreInfo?.title }}
+      </div>
+      <div class="dialog-text">{{ moreInfo.content }}</div>
+      <div class="dialog-actions flex justify-end gap-3">
+        <Button @click="closeInfo">ปิด</Button>
+      </div>
+    </Dialog>
     <div class="grid grid-cols-3 lg:grid-cols-12 mb-2">
       <Icon
         type="custom"
@@ -46,7 +56,7 @@
             </div>
             <div class="col-span-2">
               <DatePicker
-                id="start-date"
+                id="end-date"
                 v-model="form.endDate"
                 label="วันที่รับรถ"
                 mode="date"
@@ -68,13 +78,18 @@
                 class="text-white"
               ></TextField>
             </div>
-
-            <div class="col-span-3">
-              <TextField
-                label="นามสกุล"
-                v-model="state.lastName"
+            <div class="col-span-2">
+              <Radio
+                id="status"
                 class="text-white"
-              ></TextField>
+                v-model="state.status"
+                label="สถานะ"
+                :items="[
+                  { text: 'Done', value: 'done' },
+                  { text: 'Pending', value: 'pending' },
+                ]"
+                :errors="form.status.$errors"
+              ></Radio>
             </div>
           </div>
         </div>
@@ -92,125 +107,170 @@
         </div>
       </div>
       <div class="col-span-1 md:col-span-12">
-        <Table>
-          <thead class="text-center">
-            <tr>
-              <th :class="item.class" v-for="item in headers" :key="item.title">
-                {{ item.title }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-if="loading.getInspections">
-              <td colspan="100%">
-                <Icon type="custom" name="loading" class="mx-auto"></Icon>
-              </td>
-            </tr>
-            <tr v-else-if="insStore.inspections.length === 0">
-              <td colspan="100%" class="text-center">ไม่พบรายการ</td>
-            </tr>
-            <template v-else>
-              <tr
-                v-for="ins in insStore.inspections"
-                :key="ins.ID"
-                class="hover:bg-gray-100"
-              >
-                <td class="text-start">
-                  {{ dateTimeFormat(ins.InspectionDate, 'dd/MM/yyyy') }}
-                </td>
-                <td class="text-center">{{ ins.Service }}</td>
-                <td class="text-start">
-                  {{ currencyFormat(ins.Mileage) }}
-                </td>
-                <td class="text-center">{{ ins.Name }}</td>
-                <td class="text-start">{{ currencyFormat(ins.Amount) }}</td>
-
-                <td class="text-wrap">
-                  {{ ins.Description }}
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </Table>
+        <TableRentals @onShowInfo="showInfo" @openEdit="openDialog" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Table, Button, Icon } from '@/components'
-import DatePicker from '@/components/Input/DatePicker.vue'
-import TextField from '@/components/Input/TextField.vue'
+import {
+  Button,
+  Icon,
+  DatePicker,
+  TextField,
+  Dialog,
+  Radio,
+} from '@/components'
 import NewDialog from '@/components/rental/NewDialog.vue'
-import { API_STOCK } from '@/config'
-import { fetchWrapper } from '@/helpers/fetchWrapper'
-import { useCarStore, useInspectionStore, useRentalStore } from '@/stores'
-import type { TLastest, TService } from '@/types'
+import TableRentals from '@/components/rental/TableRentals.vue'
+import { useCarStore, useRentalStore } from '@/stores'
+import type { TRental } from '@/types'
 import { useCommon, useDateFns, useForm, useLoading } from '@/utils'
-import { required } from '@/utils/useValidators'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-const { currencyFormat } = useCommon()
 const isOpen = ref(false)
-
-const headers = [
-  { title: 'สถานะ', class: 'text-center' },
-  { title: 'ชื่อลูกค้า' },
-  { title: 'เลขบัตรปชช' },
-  { title: 'เบอร์โทร' },
-  { title: 'เช่า(วัน)' },
-  { title: 'ค่าเช่า' },
-  { title: 'ค่าส่งรถ' },
-  { title: 'ค่ารับรถ' },
-  { title: 'วันที่ส่งรถ' },
-  { title: 'วันที่รับรถ' },
-  { title: 'ไมค์ส่งรถ' },
-  { title: 'ไมค์รับรถ' },
-  { title: 'ระยะทาง' },
-  { title: 'โน๊ตลูกค้า' },
-  { title: 'หมายเหตุ' },
-]
+const isOpenInfo = ref(false)
+const isEdit = ref(false)
+const rental = ref<TRental>({
+  ID: 0,
+  Name: '',
+  Nid: '',
+  Phone: '',
+  StartDate: '',
+  EndDate: '',
+  StartMile: 0,
+  EndMile: 0,
+  CustomerNote: '',
+  Detail: '',
+  Expense: 0,
+  TotalAmount: 0,
+  TotalNet: 0,
+  DailyRate: 0,
+  CarDelivery1: 0,
+  CarDelivery2: 0,
+  Status: '',
+  UserID: 0,
+  CarID: 0,
+})
+const moreInfo = ref<{ title: string; content: string }>({
+  content: '',
+  title: '',
+})
 
 const carsStore = useCarStore()
 const { loading, updateLoading } = useLoading()
-const insStore = useInspectionStore()
 const rentalStore = useRentalStore()
-const { dateTimeFormat } = useDateFns()
 const { state, form, $reset, $validate } = useForm(
   {
     name: '',
-    lastName: '',
     nid: '',
     startDate: '',
     endDate: '',
+    status: '',
   },
   computed(() => {
     return {
       name: {},
-      lastName: {},
       nid: {},
       startDate: {},
       endDate: {},
+      status: {},
     }
   })
 )
 
-const search = () => {}
-
-const resetSearch = () => {}
-
-const openDialog = () => {
-  isOpen.value = true
+const search = async () => {
+  if (
+    state.name ||
+    state.nid ||
+    state.startDate ||
+    state.endDate ||
+    state.status
+  ) {
+    await rentalStore.searchRental({
+      cid: rentalStore.cidSeleted ? rentalStore.cidSeleted : '',
+      start: state.startDate
+        ? new Date(state.startDate).getTime().toString()
+        : '0',
+      end: state.endDate ? new Date(state.endDate).getTime().toString() : '0',
+      name: state.name,
+      nid: state.nid,
+    })
+  }
 }
 
-const closeDialog = async () => {
-  isOpen.value = false
+const resetSearch = async () => {
+  if (
+    state.name ||
+    state.nid ||
+    state.startDate ||
+    state.endDate ||
+    state.status
+  ) {
+    await $reset()
+    await getRentals()
+  }
+}
+
+const closeInfo = () => {
+  moreInfo.value = { content: '', title: '' }
+  isOpenInfo.value = false
+}
+
+const showInfo = (info: { title: string; content: string }) => {
+  moreInfo.value.title = info.title
+  moreInfo.value.content = info.content
+  isOpenInfo.value = true
+}
+
+const openDialog = (data: { data: TRental; action: string }) => {
+  if (data.action === 'edit') {
+    rental.value = data.data
+    isEdit.value = true
+    isOpen.value = true
+  } else {
+    isOpen.value = true
+  }
+}
+
+const closeDialog = async (edit: boolean) => {
+  if (edit) {
+    rental.value = {
+      ID: 0,
+      Name: '',
+      Nid: '',
+      Phone: '',
+      StartDate: '',
+      EndDate: '',
+      StartMile: 0,
+      EndMile: 0,
+      CustomerNote: '',
+      Detail: '',
+      Expense: 0,
+      TotalAmount: 0,
+      TotalNet: 0,
+      DailyRate: 0,
+      CarDelivery1: 0,
+      CarDelivery2: 0,
+      Status: '',
+      UserID: 0,
+      CarID: 0,
+    }
+    isEdit.value = false
+    isOpen.value = false
+    await getRentals()
+    await getCarInfo()
+  } else {
+    isOpen.value = false
+    await getCarInfo()
+  }
 }
 
 const getRentals = async () => {
-  updateLoading({ getRental: true })
+  updateLoading({ getRentals: true })
   await rentalStore.getRentals()
-  updateLoading({ getRental: false })
+  updateLoading({ getRentals: false })
 }
 
 const getCarInfo = async () => {

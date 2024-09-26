@@ -158,7 +158,13 @@ const keypressAction = (event: {
   keyCode?: number
   which: number
   preventDefault: () => void
-}) => {}
+}) => {
+  if (type.value === 'number') {
+    verifyNumber(event)
+  } else if (type.value === 'tel') {
+    verifyDigit(event as any)
+  }
+}
 const filteredClasses = computed(() => {
   const classList =
     typeof attrs.class === 'string' ? attrs.class.split(' ') : []
