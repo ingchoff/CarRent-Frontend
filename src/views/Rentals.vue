@@ -126,7 +126,7 @@ import NewDialog from '@/components/rental/NewDialog.vue'
 import TableRentals from '@/components/rental/TableRentals.vue'
 import { useCarStore, useRentalStore } from '@/stores'
 import type { TRental } from '@/types'
-import { useCommon, useDateFns, useForm, useLoading } from '@/utils'
+import { useForm, useLoading } from '@/utils'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const isOpen = ref(false)
@@ -137,8 +137,8 @@ const rental = ref<TRental>({
   Name: '',
   Nid: '',
   Phone: '',
-  StartDate: '',
-  EndDate: '',
+  StartDate: new Date(),
+  EndDate: new Date(),
   StartMile: 0,
   EndMile: 0,
   CustomerNote: '',
@@ -241,8 +241,8 @@ const closeDialog = async (edit: boolean) => {
       Name: '',
       Nid: '',
       Phone: '',
-      StartDate: '',
-      EndDate: '',
+      StartDate: new Date(),
+      EndDate: new Date(),
       StartMile: 0,
       EndMile: 0,
       CustomerNote: '',
